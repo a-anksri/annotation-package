@@ -683,11 +683,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
       remark = item['remarks'].values[0]
       status = item['is_ok'].values[0]
+      decision = item['status'].values[0]
       
       if(status == True):
             remark = "OK- " + remark
       else:
-            remark = "NOT OK- " + remark
+            remark = decision + ". " + remark
       kp_data = kp_dataset[kp_dataset["img_id"] == im]
       path = os.path.join(image_folder, im )
       img = cv.imread(path)
@@ -732,10 +733,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       cv.destroyAllWindows()
 
       if(not status):
-            c = input("Accept review and expunge annotation for this image? (y/n) ")
+            c = input("Accept review and remove annotation data? If decision is to expunge, image will also be deleted from your folder. (y/n) ")
             if(c == 'y'):
                 kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
                 status_data = status_data[status_data['file_name'] != im]
+                if(decision == 'Expunged'):
+                    os.remove(path)
                
                 
             else:

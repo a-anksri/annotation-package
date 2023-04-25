@@ -605,11 +605,11 @@ def show(kpoints, gui, im, review = False, remarks = ''):
     if(idx == 0):
       att = str(attr)
       typ = str(typ)
-      text = im + ": " + att
+      text = im + ": "
       if(review):
           gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(text + ": " + remarks)
+          gui.add_message(text + remarks, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image" )
       continue
     else:
       point = Point(idx, pid, x, y, typ, hidden, attr)
@@ -645,11 +645,14 @@ def show(kpoints, gui, im, review = False, remarks = ''):
       
 
 
-def see_review(kp_dataset_path, status_file_path, review_file_path, window_size, image_folder, data_file_folder):
+def see_review(kp_dataset_path, status_file_path, review_file_path, window_size, image_folder, data_file_folder, rejected_only = True):
     kp_dataset = pd.read_csv(kp_dataset_path)
     status_data = pd.read_csv(status_file_path, index_col = False)  
     report = []
-
+    expunged_list = []
+    if(rejected_only == True):
+      print("NOTE: You must run through the reviews so that accepted entries are updated and rejected annotations are removed")
+      print("Showing only rejected entries. If you want to see all, pass 'rejected_only = False' to see_review function")
     
    
     if(os.path.exists(review_file_path)):
@@ -674,16 +677,25 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
         count += 1
         continue
 
-      
-
-      if(im not in completed):
-        x = input('This file has not been sent for review. Discuss with reviewer')
-        continue
-
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
       remark = item['remarks'].values[0]
       status = item['is_ok'].values[0]
       decision = item['status'].values[0]
+
+      if(rejected_only == True) and (status == True):
+        this_record = status_data['file_name'] == im
+        status_data.loc[this_record, 'accepted'] = True
+        continue
+          
+
+      if(im not in completed) and (status != True):
+        continue
+
+      if(im not in completed):
+        x = print('This file has not been sent for review. Discuss with reviewer')
+        continue
+
+      
       
       if(status == True):
             remark = "OK- " + remark
@@ -738,7 +750,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
                 kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
                 status_data = status_data[status_data['file_name'] != im]
                 if(decision == 'Expunged'):
-                    os.remove(path)
+                    expunged_list.append(path)
                
                 
             else:
@@ -766,8 +778,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
     os.remove(kp_dataset_path)
     os.rename(tmp_path,kp_dataset_path)
 
-    print("List of images where you did not agree with reviewer. Pl discuss with reviewer:")
-    print(report)
+    
+    return((report, expunged_list))
 
     
     

@@ -645,10 +645,79 @@ def show(kpoints, gui, im, review = False, remarks = ''):
       
 
 
+def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data_file_folder, im):
+      kp_dataset = pd.read_csv(kp_dataset_path)
+      status_data = pd.read_csv(status_file_path, index_col = False)
+      gui = Display_GUI(window_size)
+      gui.add_image_controls() 
+
+      kp_data = kp_dataset[kp_dataset["img_id"] == im]
+      path = os.path.join(image_folder, im )
+      img = cv.imread(path)
+      gui.add_image(img)
+
+      person_list = kp_data['person'].unique()
+      cv.namedWindow("View")
+      cv.setMouseCallback("View", handler, (gui,) )
+
+	status = status_data[status_data["file name"] == im]
+      remark = status["reviewer_remarks"].values[0]
+      for person in person_list:
+        kpoints = kp_data[kp_data["person"] == person]
+        show(kpoints, gui,im, remarks = remark + " || Current Person {}".format(person))
+        jump = False
+        stat = 0
+        while(True):
+
+          window = gui.compose()
+
+          cv.imshow("View", window)
+          a = cv.waitKey(20)
+          if(a == ord(' ')):
+            gui.destroy()
+            break
+          if(not status):
+            if(a == ord('d') and stat == 1):
+              exp = kp_dataset['img_id'] != im and kp_dataset['person'] != person 
+              kp_dataset = kp_dataset.loc[exp]
+              stat = 0
+              gui.reset_alert()
+              gui.destroy()
+              break
+            elif(a == ord('d') and stat == 0):
+              gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
+              stat = 1
+              
+              
+          if(a == ord('t')):
+            gui.toggle_annotations()
+          if(a == ord('l')):
+            gui.toggle_limb()
+          if(a == ord('n')):
+            gui.destroy()
+            jump = True
+            break
+
+        if(jump):
+            break
+
+
+
+
+      
+      cv.destroyAllWindows()
+
+      tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
+      kp_dataset.to_csv(tmp_path, index = False)
+    
+      os.remove(kp_dataset_path)
+      os.rename(tmp_path,kp_dataset_path)
+
+    
+
 def see_review(kp_dataset_path, status_file_path, review_file_path, window_size, image_folder, data_file_folder):
     kp_dataset = pd.read_csv(kp_dataset_path)
-    status_data = pd.read_csv(status_file_path, index_col = False)  
-    report = []
+    status_data = pd.read_csv(status_file_path, index_col = False) 
 
     
    
@@ -662,6 +731,9 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
     sent = status_data[status_data['sent_for_review'] == True]
     completed = sent['file_name'].values
+
+    sent1 = status_data[status_data['accepted'] == True]
+    completed1 = sent1['file_name'].values
 
     gui = Display_GUI(window_size)
     gui.add_image_controls()
@@ -677,7 +749,49 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       
 
       if(im not in completed):
+        continue
+
+      if(im in completed1):
+        continue
+
+      item = reviewer_dataset[reviewer_dataset['img_id'] == im]
+      remark = item['remarks'].values[0]
+      status = item['is_ok'].values[0]
+      
+      if(status == True):
+            this_record = status_data['file_name'] == im
+            status_data.loc[this_record, 'accepted'] = True
+      else:
+            
+            this_record = status_data['file_name'] == im
+            status_data.loc[this_record, 'success'] = False
+            status_data.loc[this_record, 'sent_for_review'] = False
+            status_data.loc[this_record, 'reviewer_remarks'] = remark
+
+
+    tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
+    kp_dataset.to_csv(tmp_path, index = False)
+    status_data.to_csv(status_file_path, index = False)
+    os.remove(kp_dataset_path)
+    os.rename(tmp_path,kp_dataset_path)
+    
+    inp = input("All Review Results Ingested. Do you want to see the individual reviews? (y/n) ")
+    if(inp == 'n'):
+      return
+
+    for im in img_list:
+      if(count < 0):
+        count += 1
+        continue
+
+      
+
+      if(im not in completed):
         x = input('This file has not been sent for review. Discuss with reviewer')
+        continue
+
+      if(im in completed1):
+        x = input('This file has already been accepted. Discuss with reviewer')
         continue
 
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
@@ -688,6 +802,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
             remark = "OK- " + remark
       else:
             remark = "NOT OK- " + remark
+            
+      
       kp_data = kp_dataset[kp_dataset["img_id"] == im]
       path = os.path.join(image_folder, im )
       img = cv.imread(path)
@@ -700,9 +816,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
       for person in person_list:
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark)
+        show(kpoints, gui,im, remarks = remark + " || Current Person {}".format(person))
         jump = False
+        stat = 0
         while(True):
+
+          
 
 
 
@@ -713,6 +832,19 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
           if(a == ord(' ')):
             gui.destroy()
             break
+          if(not status):
+            if(a == ord('d') and stat == 1):
+              exp = kp_dataset['img_id'] != im and kp_dataset['person'] != person 
+              kp_dataset = kp_dataset.loc[exp]
+              stat = 0
+              gui.reset_alert()
+              gui.destroy()
+              break
+            elif(a == ord('d') and stat == 0):
+              gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
+              stat = 1
+              
+              
           if(a == ord('t')):
             gui.toggle_annotations()
           if(a == ord('l')):
@@ -732,21 +864,15 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       cv.destroyAllWindows()
 
       if(not status):
-            c = input("Accept review and expunge annotation for this image? (y/n) ")
+            c = input("Do you want to expunge complete annotation record for this image? (Usually not needed) (y/n) ")
             if(c == 'y'):
                 kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
                 status_data = status_data[status_data['file_name'] != im]
                
                 
-            else:
-                this_record = status_data['file_name'] == im
-                status_data.loc[this_record, 'accepted'] = False
-                print("Alert: This file's annotation has been retained even though its accepted status is False. You may not be able to annotate it again in normal course" )
-                report.append(im)
+            
     
-      else:
-        this_record = status_data['file_name'] == im
-        status_data.loc[this_record, 'accepted'] = True
+ 
         
       
       b = input("see next review? (y/n) ")
@@ -763,8 +889,6 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
     os.remove(kp_dataset_path)
     os.rename(tmp_path,kp_dataset_path)
 
-    print("List of images where you did not agree with reviewer. Pl discuss with reviewer:")
-    print(report)
-
+    
     
     

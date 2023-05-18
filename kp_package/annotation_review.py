@@ -605,9 +605,9 @@ def show(kpoints, gui, im, review = True, remarks = ''):
     if(idx == 0):
       att = str(attr)
       typ = str(typ)
-      text = im + ": " + att
+      text = att
       if(review):
-          gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
+          gui.add_message(remarks + ": " + text , "Space: next person, p: previous person, t: toggle landmarks, l: toggle limbs")
       else:
           gui.add_message(text + ": " + remarks)
       continue
@@ -712,10 +712,12 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       cv.namedWindow("View")
       cv.setMouseCallback("View", handler, (gui,) )
 
-
-      for person in person_list:
+      i = 0
+      max = len(person_list)
+      while(i < max):
+        person = person_list[i]
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im)
+        show(kpoints, gui,im, remarks = "|| Showing Person {}".format(person))
         jump = False
         
         while(True):
@@ -726,15 +728,22 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           a = cv.waitKey(20)
           if(a == ord(' ')):
             gui.destroy()
+            i += 1
             break
           if(a == ord('t')):
             gui.toggle_annotations()
           if(a == ord('l')):
             gui.toggle_limb()
-          if(a == ord('n')):
+          if(a == ord('p')):
             gui.destroy()
-            jump = True
+            if(i == 0):
+              pass
+            else:
+              i -= 1
+           
             break
+
+          
 
         if(jump):
             break

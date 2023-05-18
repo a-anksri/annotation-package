@@ -586,7 +586,7 @@ def handler(event, x, y, flags, params):
             
             
             
-def show(kpoints, gui, im, review = False, remarks = ''):
+def show(kpoints, gui, im, review = False, remarks = '', with_tool = False):
 
   
   
@@ -606,11 +606,13 @@ def show(kpoints, gui, im, review = False, remarks = ''):
     if(idx == 0):
       att = str(attr)
       typ = str(typ)
-      text = im + ": " + att
+      text = att
+      if(with_tool):
+        remarks = "SHOWING EXISTING ANNOTATIONS"
       if(review):
           gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(text + ": " + remarks)
+          gui.add_message(remarks + ": " + text, "Space: next person, p: orevious person, t: toggle landmarks, l: toggle limbs, d: delete person")
       continue
     else:
       point = Point(idx, pid, x, y, typ, hidden, attr)
@@ -663,10 +665,13 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
 
       status = status_data[status_data["file_name"] == im]
       remark = status["reviewer_remarks"].values[0]
-      print(remark)
-      for person in person_list:
+      
+      i = 0
+      max = len(person_list)
+      while(i < max):
+        person = person_list[i]
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark)
+        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), with_tool = True)
         jump = False
         stat = False
         while(True):
@@ -676,11 +681,16 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
           cv.imshow("View", window)
           a = cv.waitKey(20)
           if(a == ord(' ')):
+
+            if(stat):
+              gui.reset_alert()
+              stat = False
             gui.destroy()
+            i += 1
             break
           
           if(a == ord('d') and stat == True):
-              exp = map(operator.and_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
+              exp = map(operator.or_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
               kp_dataset = kp_dataset.loc[exp]
               exp = status_data['file_name'] == im
               status_data.loc[exp, 'success'] = False
@@ -695,11 +705,21 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               
           if(a == ord('t')):
             gui.toggle_annotations()
+            if(stat):
+              gui.reset_alert()
+              stat = False
           if(a == ord('l')):
             gui.toggle_limb()
-          if(a == ord('n')):
+            if(stat):
+              gui.reset_alert()
+              stat = False
+          if(a == ord('p')):
             gui.destroy()
-            jump = True
+            if(i == 0):
+              pass
+            else:
+              i -= 1
+           
             break
 
         if(jump):
@@ -820,7 +840,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
         continue
 
       if(im in expunged):
-        print("image {} has been expunged from landmark dataset by reviewer. Discuss with reviewer")
+        print("image {} has been expunged from landmark dataset by reviewer. Discuss with reviewer".format(im))
         continue
 
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
@@ -843,9 +863,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       cv.setMouseCallback("View", handler, (gui,) )
 
 
-      for person in person_list:
+      i = 0
+      max = len(person_list)
+      while(i < max):
+        person = person_list[i]
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark + " || Current Person {}".format(person))
+        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person))
         jump = False
         stat = False
         while(True):
@@ -858,19 +881,24 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
           cv.imshow("View", window)
           a = cv.waitKey(20)
-
           if(a == ord(' ')):
+
+            if(stat):
+              gui.reset_alert()
+              stat = False
             gui.destroy()
+            i += 1
             break
+          
           if(a == ord('d') and stat == True):
-              exp = map(operator.and_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
+              exp = map(operator.or_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
               kp_dataset = kp_dataset.loc[exp]
               exp = status_data['file_name'] == im
-          
               status_data.loc[exp, 'success'] = False
               stat = False
               gui.reset_alert()
               gui.destroy()
+              i += 1
               break
           elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
@@ -879,15 +907,26 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               
           if(a == ord('t')):
             gui.toggle_annotations()
+            if(stat):
+              gui.reset_alert()
+              stat = False
           if(a == ord('l')):
             gui.toggle_limb()
-          if(a == ord('n')):
+            if(stat):
+              gui.reset_alert()
+              stat = False
+
+          if(a == ord('p')):
             gui.destroy()
-            jump = True
+            if(i == 0):
+              pass
+            else:
+              i -= 1
+           
             break
 
+          
 
-         
         if(jump):
             break
 

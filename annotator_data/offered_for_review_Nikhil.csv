@@ -1,0 +1,14 @@
+id,pid,type,x,y,attr,person,img_id,hidden
+0,-1,Root,0,0,rt,0,Bhutan_I1.png,True
+1,0,Forehead,215,132,,0,Bhutan_I1.png,False
+2,1,Nose,215,158,,0,Bhutan_I1.png,False
+3,1,Mouth,215,171,,0,Bhutan_I1.png,False
+0,-1,Root,0,0,tf,0,Bhutan_I10.png,True
+1,0,Forehead,188,112,,0,Bhutan_I10.png,False
+2,1,Nose,187,136,,0,Bhutan_I10.png,False
+0,-1,Root,0,0,oer,0,Bhutan_I12.png,True
+1,0,Forehead,218,127,,0,Bhutan_I12.png,False
+2,1,Nose,213,159,,0,Bhutan_I12.png,False
+0,-1,Root,0,0,rt,0,Bhutan_I13.png,True
+1,0,Forehead,186,145,,0,Bhutan_I13.png,False
+2,1,Nose,177,221,,0,Bhutan_I13.png,False

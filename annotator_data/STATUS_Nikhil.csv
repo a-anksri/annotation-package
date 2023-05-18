@@ -1,0 +1,10 @@
+file_name,annotator,success,sent_for_review,accepted,reviewer_remarks,reviewer,expunge
+Bhutan_I0.png,Nikhil,True,True,True,Accepted,Ankur,False
+Bhutan_I1.png,Nikhil,True,True,True,Accepted,Ankur,False
+Bhutan_I10.png,Nikhil,False,False,False,bad again,Ankur,False
+Bhutan_I100.png,Nikhil,False,False,False,Expunge,Ankur,True
+Bhutan_I101.png,Nikhil,True,True,False,Nil,Nil,False
+Bhutan_I102.png,Nikhil,True,True,True,Accepted,Ankur,False
+Bhutan_I11.png,Nikhil,True,True,False,Nil,Nil,False
+Bhutan_I12.png,Nikhil,False,False,False,Expunge,Ankur,True
+Bhutan_I13.png,Nikhil,True,True,True,Accepted,Ankur,False

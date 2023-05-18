@@ -4,6 +4,7 @@ import cv2 as cv
 import sys
 import string
 import os
+import operator
 
 class Element:
     
@@ -660,13 +661,14 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
       cv.namedWindow("View")
       cv.setMouseCallback("View", handler, (gui,) )
 
-	status = status_data[status_data["file name"] == im]
+      status = status_data[status_data["file_name"] == im]
       remark = status["reviewer_remarks"].values[0]
+      print(remark)
       for person in person_list:
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark + " || Current Person {}".format(person))
+        show(kpoints, gui,im, remarks = remark)
         jump = False
-        stat = 0
+        stat = False
         while(True):
 
           window = gui.compose()
@@ -676,17 +678,19 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
           if(a == ord(' ')):
             gui.destroy()
             break
-          if(not status):
-            if(a == ord('d') and stat == 1):
-              exp = kp_dataset['img_id'] != im and kp_dataset['person'] != person 
+          
+          if(a == ord('d') and stat == True):
+              exp = map(operator.and_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
               kp_dataset = kp_dataset.loc[exp]
-              stat = 0
+              exp = status_data['file_name'] == im
+              status_data.loc[exp, 'success'] = False
+              stat = False
               gui.reset_alert()
               gui.destroy()
               break
-            elif(a == ord('d') and stat == 0):
+          elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
-              stat = 1
+              stat = True
               
               
           if(a == ord('t')):
@@ -704,12 +708,19 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
 
 
 
-      
+     
       cv.destroyAllWindows()
-
+      kp_data = kp_dataset[kp_dataset["img_id"] == im]
+      new_list = kp_data['person'].unique()
+      if(len(new_list) == 0):
+        kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
+        status_data = status_data[status_data['file_name'] != im]
+        print("All persons deleted for this image. Record expunged")
+        
+        
       tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
       kp_dataset.to_csv(tmp_path, index = False)
-    
+      status_data.to_csv(status_file_path, index = False)
       os.remove(kp_dataset_path)
       os.rename(tmp_path,kp_dataset_path)
 
@@ -718,7 +729,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
 def see_review(kp_dataset_path, status_file_path, review_file_path, window_size, image_folder, data_file_folder):
     kp_dataset = pd.read_csv(kp_dataset_path)
     status_data = pd.read_csv(status_file_path, index_col = False) 
-
+    expunged = []
     
    
     if(os.path.exists(review_file_path)):
@@ -749,24 +760,38 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       
 
       if(im not in completed):
+        x = input('{}: This file has not been sent for review. Discuss with reviewer'.format(im))
         continue
 
       if(im in completed1):
+        x = input('{}: This file has already been accepted. Discuss with reviewer'.format(im))
         continue
-
+      
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
       remark = item['remarks'].values[0]
       status = item['is_ok'].values[0]
-      
+      reviewer = item['reviewer'].values[0]
+      expunge = item['expunge'].values[0]
       if(status == True):
             this_record = status_data['file_name'] == im
             status_data.loc[this_record, 'accepted'] = True
+            status_data.loc[this_record, 'reviewer'] = reviewer
+            status_data.loc[this_record, 'reviewer_remarks'] = 'Accepted'
+     
+            
+
       else:
             
             this_record = status_data['file_name'] == im
             status_data.loc[this_record, 'success'] = False
             status_data.loc[this_record, 'sent_for_review'] = False
             status_data.loc[this_record, 'reviewer_remarks'] = remark
+            status_data.loc[this_record, 'reviewer'] = reviewer
+            if(expunge):
+              status_data.loc[this_record, 'reviewer_remarks'] = 'Expunge'
+              status_data.loc[this_record, 'expunge'] = True
+              kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
+              expunged.append(im)
 
 
     tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
@@ -787,11 +812,15 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       
 
       if(im not in completed):
-        x = input('This file has not been sent for review. Discuss with reviewer')
+        
         continue
 
       if(im in completed1):
-        x = input('This file has already been accepted. Discuss with reviewer')
+        
+        continue
+
+      if(im in expunged):
+        print("image {} has been expunged from landmark dataset by reviewer. Discuss with reviewer")
         continue
 
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
@@ -818,7 +847,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
         kpoints = kp_data[kp_data["person"] == person]
         show(kpoints, gui,im, remarks = remark + " || Current Person {}".format(person))
         jump = False
-        stat = 0
+        stat = False
         while(True):
 
           
@@ -829,20 +858,23 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
           cv.imshow("View", window)
           a = cv.waitKey(20)
+
           if(a == ord(' ')):
             gui.destroy()
             break
-          if(not status):
-            if(a == ord('d') and stat == 1):
-              exp = kp_dataset['img_id'] != im and kp_dataset['person'] != person 
+          if(a == ord('d') and stat == True):
+              exp = map(operator.and_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
               kp_dataset = kp_dataset.loc[exp]
-              stat = 0
+              exp = status_data['file_name'] == im
+          
+              status_data.loc[exp, 'success'] = False
+              stat = False
               gui.reset_alert()
               gui.destroy()
               break
-            elif(a == ord('d') and stat == 0):
+          elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
-              stat = 1
+              stat = True
               
               
           if(a == ord('t')):
@@ -854,6 +886,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
             jump = True
             break
 
+
+         
         if(jump):
             break
 
@@ -862,15 +896,14 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
       
       cv.destroyAllWindows()
+      kp_data = kp_dataset[kp_dataset["img_id"] == im]
+      new_list = kp_data['person'].unique()
+      if(len(new_list) == 0):
+        kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
+        status_data = status_data[status_data['file_name'] != im]
+        print("All persons deleted for this image. Record expunged")
 
-      if(not status):
-            c = input("Do you want to expunge complete annotation record for this image? (Usually not needed) (y/n) ")
-            if(c == 'y'):
-                kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
-                status_data = status_data[status_data['file_name'] != im]
-               
-                
-            
+      
     
  
         

@@ -1,0 +1,5 @@
+img_id,is_ok,remarks,reviewer,expunge
+Bhutan_I1.png,True,Accepted,Ankur,False
+Bhutan_I10.png,False,bad again,Ankur,False
+Bhutan_I12.png,False,Accepted,Ankur,True
+Bhutan_I13.png,True,Accepted,Ankur,False

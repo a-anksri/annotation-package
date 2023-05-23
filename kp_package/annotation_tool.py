@@ -1167,10 +1167,10 @@ def handler(event, x, y, flags, params):
             
         
         
-def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768)):
+def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), next_id = 0):
   
   gui = Gui(window_size)
-  person_id = 0
+  person_id = next_id
   added = False
   
   

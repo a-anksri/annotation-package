@@ -605,9 +605,9 @@ def show(kpoints, gui, im, review = True, remarks = ''):
     if(idx == 0):
       att = str(attr)
       typ = str(typ)
-      text = im + ": " + att
+      text = att
       if(review):
-          gui.add_message(text, "Space: next person in image, b: previous person, t: hide annotations, l: limb on/off, x: next image")
+          gui.add_message(remarks + ": " + text , "Space: next person, p: previous person, t: toggle landmarks, l: toggle limbs")
       else:
           gui.add_message(text + ": " + remarks)
       continue
@@ -644,18 +644,24 @@ def show(kpoints, gui, im, review = True, remarks = ''):
         
       
 
-def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, window_size, image_folder):
+def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, expunge_file_path, window_size, image_folder, reviewer):
     kp_dataset = pd.read_csv(kp_dataset_path, index_col = False)
 
     if(os.path.exists(accepted_file_path)):
       accepted = pd.read_csv(accepted_file_path, index_col = False)
       accepted_list = accepted['img_id'].values
     else:
-      accepted = pd.DataFrame(columns = ['img_id', 'decided', 'status'])
+      accepted = pd.DataFrame(columns = ['img_id', 'accepted'])
       accepted.to_csv(accepted_file_path, index = False)
       accepted_list = []
 
-    
+    if(os.path.exists(expunge_file_path)):
+      expunged = pd.read_csv(expunge_file_path, index_col = False)
+      expunged_list = expunged['img_id'].values
+    else:
+      expunged = pd.DataFrame(columns = ['img_id', 'expunged'])
+      expunged.to_csv(expunge_file_path, index = False)
+      expunged_list = []
 
 
     if(os.path.exists(to_review_path)):
@@ -667,7 +673,7 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
     if(os.path.exists(review_file_path)):
           reviewer_dataset = pd.read_csv(review_file_path, index_col = False)
     else:
-          reviewer_dataset = pd.DataFrame(columns = ['img_id', 'is_ok', 'status', 'remarks'])
+          reviewer_dataset = pd.DataFrame(columns = ['img_id', 'is_ok', 'remarks', 'reviewer'])
 
     done = reviewer_dataset['img_id'].values
 
@@ -686,10 +692,15 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           continue
 
       if(im in accepted_list):
-        print("File " + im + " has already been decided. Discuss with annotator" )
+        print("File " + im + " has already been accepted. Discuss with annotator" )
+        continue
+      
+      if(im in expunged_list):
+        print("File " + im + " has already been expunged. Discuss with annotator" )
         continue
 
-      new_record = {'img_id':[im],'is_ok':[], 'status' : [], 'remarks':[]}
+
+      new_record = {'img_id':[im],'is_ok':[],'remarks':[], 'expunge': [], 'reviewer':[reviewer]}
       
       kp_data = kp_dataset[kp_dataset["img_id"] == im]
       path = os.path.join(image_folder, im)
@@ -701,11 +712,12 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       cv.namedWindow("View")
       cv.setMouseCallback("View", handler, (gui,) )
 
-      count = len(person_list)
-      present = 0
-      while(present < count):
-        kpoints = kp_data[kp_data["person"] == present]
-        show(kpoints, gui,im)
+      i = 0
+      max = len(person_list)
+      while(i < max):
+        person = person_list[i]
+        kpoints = kp_data[kp_data["person"] == person]
+        show(kpoints, gui,im, remarks = "|| Showing Person {}".format(person))
         jump = False
         
         while(True):
@@ -715,22 +727,23 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           cv.imshow("View", window)
           a = cv.waitKey(20)
           if(a == ord(' ')):
-            present += 1
             gui.destroy()
-            break
-          
-          if(a == ord('b') and present > 0):
-            present = present - 1
-            gui.destroy()
+            i += 1
             break
           if(a == ord('t')):
             gui.toggle_annotations()
           if(a == ord('l')):
             gui.toggle_limb()
-          if(a == ord('x')):
+          if(a == ord('p')):
             gui.destroy()
-            jump = True
+            if(i == 0):
+              pass
+            else:
+              i -= 1
+           
             break
+
+          
 
         if(jump):
             break
@@ -739,39 +752,39 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
 
       cv.destroyAllWindows()
-      ok = input("Is annotation satisfactory? (y/n). s to skip review ")
+      ok = input("Is annotation satisfactory? (y/n/e/s). e to expunge ; s to skip review ")
       if(ok == 's'):
          pass
       else:
           if (ok == 'y'):
             new_record['is_ok'].append(True)
-            new_record['status'].append('Accepted')
+            new_record['expunge'].append(False)
             
-          elif (ok == 'e'):
-            new_record['is_ok'].append(True)
-            new_record['status'].append('Expunged')
           else:
             new_record['is_ok'].append(False)
-            new_record['status'].append('Rejected')
-
-          if(ok == 'n') or (ok == 'e'):
+          if(ok == 'n'):
               remarks = input("Any remarks? ")
               new_record['remarks'].append(remarks)
+              new_record['expunge'].append(False)        
           else:
             new_record['remarks'].append('Accepted')
           
-          new_record = pd.DataFrame(new_record)                          
-          reviewer_dataset = reviewer_dataset.append(new_record, ignore_index = True)  
+          
           
           if(ok == 'y'):
-              accepted_record = {'img_id':[im], 'decided':[True], 'status':['Accepted']}
+              accepted_record = {'img_id':[im], 'accepted':[True]}
               accepted_record = pd.DataFrame(accepted_record)
               accepted = accepted.append(accepted_record, ignore_index = True)
-          elif(ok == 'e'):
-              accepted_record = {'img_id':[im], 'decided':[True], 'status':['Expunged']}
-              accepted_record = pd.DataFrame(accepted_record)
-              accepted = accepted.append(accepted_record, ignore_index = True)
+
+          if(ok == 'e'):
+              expunged_record = {'img_id':[im], 'expunged':[True]}
+              expunged_record = pd.DataFrame(expunged_record)
+              expunged = expunged.append(expunged_record, ignore_index = True)
+              new_record['expunge'].append(True)
      
+          new_record = pd.DataFrame(new_record)
+          reviewer_dataset = reviewer_dataset.append(new_record, ignore_index = True)
+      
       b = input("show next image in folder? (y/n) ")
 
       if(b == 'y'):
@@ -782,6 +795,7 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
     reviewer_dataset.to_csv(review_file_path, index = False)
     accepted.to_csv(accepted_file_path, index = False)
+    expunged.to_csv(expunge_file_path, index = False)
 
 
 

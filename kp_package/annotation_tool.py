@@ -1009,7 +1009,7 @@ class Gui:
 
 def keyboard_input(gui, person_id):
     if(person_id == 0):
-        msg = "Start Annotation. Enter Attributes for the first person"
+        msg = "Start Annotation. Enter Attributes for the first person ('-1' to escape)"
     else:
         msg = "Starting New Person. Enter Attributes"
     text = ""

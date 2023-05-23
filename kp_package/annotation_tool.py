@@ -568,6 +568,7 @@ class Gui:
         
         #Setting location of dialog box just below the cursor
         xmin = max(x-100,0)
+        xmin = min(xmin,self.window_size[0],self.window_size[0] - 350) 
         if ((y + 150) > self.message_offset[1]):
             ymax = y - 200
         else:
@@ -1172,6 +1173,7 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
   gui = Gui(window_size)
   person_id = next_id
   added = False
+  added_count = 0
   
   
   gui.add_image(img)
@@ -1186,7 +1188,9 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
     
     
     attr = keyboard_input(gui, person_id)
-    
+    if(attr == '-1'):
+        break
+        
     annot.start_annotation(attr)
     
     cv.namedWindow("View")
@@ -1267,11 +1271,14 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
         elif(a == ord('a')):
             to_save = True
             more = True
+            added_count += 1
             break
         
         elif(a == ord('s')):
             to_save = True
             more = False
+            added_count += 1
+  
             break
         
         elif(a == ord('x') and alert):
@@ -1304,4 +1311,7 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
         person_id += 1
         gui.destroy()
 
+  cv.destroyAllWindows()
+  if(added_count > 0):
+      added = True
   return (added)

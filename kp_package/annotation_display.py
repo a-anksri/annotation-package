@@ -608,7 +608,7 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False):
       typ = str(typ)
       text = att
       if(with_tool):
-        remarks = "SHOWING EXISTING ANNOTATIONS"
+        remarks = "REVIEW - " + remarks
       if(review):
           gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
@@ -668,8 +668,16 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
       
       i = 0
       max = len(person_list)
+      deleted_list = []
+      next = True
       while(i < max):
         person = person_list[i]
+        if(person in deleted_list):
+            if(next):
+                i += 1
+            else:
+                i -= 1
+            continue
         kpoints = kp_data[kp_data["person"] == person]
         show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), with_tool = True)
         jump = False
@@ -687,6 +695,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               stat = False
             gui.destroy()
             i += 1
+            next = True
             break
           
           if(a == ord('d') and stat == True):
@@ -697,6 +706,8 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               stat = False
               gui.reset_alert()
               gui.destroy()
+              deleted_list.append(person)
+              i += 1
               break
           elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
@@ -719,7 +730,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               pass
             else:
               i -= 1
-           
+            next = False
             break
 
         if(jump):
@@ -766,6 +777,9 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
     sent1 = status_data[status_data['accepted'] == True]
     completed1 = sent1['file_name'].values
 
+    sent2 = status_data[status_data['expunge'] == True]
+    completed2 = sent1['file_name'].values
+
     gui = Display_GUI(window_size)
     gui.add_image_controls()
     
@@ -785,6 +799,10 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
       if(im in completed1):
         x = input('{}: This file has already been accepted. Discuss with reviewer'.format(im))
+        continue
+
+      if(im in completed2):
+        x = input('{}: This file has already been Expunged. Discuss with reviewer'.format(im))
         continue
       
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
@@ -865,8 +883,16 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
       i = 0
       max = len(person_list)
+      deleted_list = []
+      next = True
       while(i < max):
         person = person_list[i]
+        if(person in deleted_list):
+            if(next):
+                i += 1
+            else:
+                i -= 1
+            continue
         kpoints = kp_data[kp_data["person"] == person]
         show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person))
         jump = False
@@ -888,6 +914,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               stat = False
             gui.destroy()
             i += 1
+            next = True
             break
           
           if(a == ord('d') and stat == True):
@@ -898,6 +925,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               stat = False
               gui.reset_alert()
               gui.destroy()
+              deleted_list.append(person)
               i += 1
               break
           elif(a == ord('d') and stat == False):
@@ -922,6 +950,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               pass
             else:
               i -= 1
+            next = False
            
             break
 

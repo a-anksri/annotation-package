@@ -1,8 +1,0 @@
-img_id,is_ok,remarks,reviewer,expunge
-im3.png,True,Accepted,Ankur,False
-im5.png,False,tre,Ankur,False
-im10.png,True,Accepted,Ankur,False
-im6.png,False,Accepted,Ankur,True
-im7.png,True,Accepted,Ankur,False
-im8.png,False,rew,Ankur,False
-im9.png,True,Accepted,Ankur,False

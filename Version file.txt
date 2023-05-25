@@ -2,8 +2,6 @@ Past Versions:
 
 Ver 1.0
 
-Current Version:
-
 Ver 1.1:
 Annotation Package for Hierarchical landmark annotation.
 Code for review of annotations also incorporated
@@ -12,3 +10,8 @@ Changes over Ver 1.0
 1) annotation_tool.ipynb now shows existing annotations for an incomplete image
 2) Annotator can delete landmarks of a specific person (not all persons in an image in one go)
 3) Minor UI changes
+
+Current Version 1.2:
+Changes
+1) Minor Bug fix
+2) Minor change in UI

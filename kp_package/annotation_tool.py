@@ -7,19 +7,21 @@ import os
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
+landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth","Crown", "Article", "Vaahan"]
+limbs = {"Root":[1], "Forehead":[20,10,19,2,6,3,7,4,8,5,9,22], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18], "Left Wrist" : [21], "Right Wrist" : [21]}
 possible_duplicates = [1,11,12,13,14]
+annotation_type = ["Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Point","Bbox", "Bbox", "Bbox"]
 
 class Link:
 
-  def __init__(self, landmark, possible = False):
+  def __init__(self, landmark, possible = False, annot_type = "Point"):
     self.landmark_type = landmark
     self.parent = self
     self.children = []
     self.next_child = 0
     self.duplicate_possible = possible
     self.touched = False
+    self.annot_type = annot_type
   
   def add_parent(self, parent):
     self.parent = parent
@@ -29,6 +31,9 @@ class Link:
 
   def get_type(self):
     return self.landmark_type
+
+  def get annot_type(self):
+    return(self.annot_type)  
 
   def get_parent(self):
     return self.parent
@@ -44,16 +49,17 @@ class Link:
 
 class Chain:
 
-  def __init__(self, landmarks, limbs, possible_duplicates):
+  def __init__(self, landmarks, limbs, possible_duplicates, annot_types):
     self.landmarks = landmarks
     self.limbs = limbs
     self.possible_duplicates = possible_duplicates
+    self.annot_types = annot_types
     self.links = {}
     for i, landmark in enumerate(self.landmarks):
       if(i in self.possible_duplicates):
-        link = Link(landmark, True)
+        link = Link(landmark, True, self.annot_types[i])
       else:
-        link = Link(landmark, False)
+        link = Link(landmark, False, self.annot_types[i])
       self.links[landmark] = link
 
     self.links["Root"].add_parent(None)
@@ -80,7 +86,7 @@ class Chain:
 class Final_Annotation():
 
   def __init__(self):
-    self.annotations = {"id":[],"pid":[], "type": [], "x":[], "y": [], "attr":[], "person":[], "img_id":[], "hidden":[]}
+    self.annotations = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [] , "y1" : [] , "annot_type" : [] , "attr":[], "person":[], "img_id":[], "hidden":[]}
     self.next_id = 0
     self.roots = []
 
@@ -93,13 +99,14 @@ class Final_Annotation():
 
 class Annotation_GUI:
 
-    def __init__(self, landmarks, limbs, possible_duplicates, person_id = -1, img_id = 'I-1'):
-        self.tree = {"id":[],"pid":[], "type": [], "x":[], "y": [], "attr":[], "person":[], "img_id":[], "hidden":[], "children":[]}
+    def __init__(self, landmarks, limbs, possible_duplicates, annot_types, person_id = -1, img_id = 'I-1'):
+        self.tree = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [] , "y1" : [] , "annot_type" : [] , "attr":[], "person":[], "img_id":[], "hidden":[], "children":[]}
         self.count = 0
         self.landmarks = landmarks
         self.img_id = img_id
         self.limbs = limbs
         self.possible_duplicates = possible_duplicates
+        self.annot_types = annot_types
         self.chain = None
         self.roots = []
         self.current_root = None
@@ -140,26 +147,7 @@ class Annotation_GUI:
     
     def successor(self, up = False):
 
-        '''       
-        if(up):
-            if(self.next_link.duplicate_possible):
-                self.parent_link.next_child += 1
-            else:
-                pass
-
-              self.next_link = self.parent_link
-              if(self.next_link.get_type() == "Root"):
-                return (-1)
-
-              self.current_parent = self.tree['pid'][self.current_id]
-              self.parent_link = self.next_link.parent
-
-
-              self.successor()
-              print("At exit. up = true")
-              print(self.current_id, self.current_parent, self.next_link.get_type(), self.next_link.next_child, self.parent_link.get_type(), self.parent_link.next_child)
-              return
-        '''
+        
 
         if(self.next_link.next_child < len(self.next_link.children)):
 
@@ -200,6 +188,9 @@ class Annotation_GUI:
         self.tree['type'].append("Root")
         self.tree['x'].append(0)
         self.tree['y'].append(0)
+        self.tree['x1'].append(0)
+        self.tree['y1'].append(0)
+        self.tree['annot_type'].append("Point")
         self.tree['attr'].append(attr)
         self.tree['person'].append(self.person_id)
         self.tree['img_id'].append(self.img_id)
@@ -232,16 +223,25 @@ class Annotation_GUI:
         if(self.state == 'select'):
 
           l_type = self.next_link.get_type()
-          self.temp_add(l_type, x, y, '')
-          #self.draw_point_on_pane(x,y)
+          annot_type = self.next_link.get_annot_type()
+          self.temp_add(l_type, annot_type, x, y, '')
+          
+        if(self.state == 'draw_bbox'):
+
+          self.temp_add2(x, y, '')
+          
   
-    def temp_add(self, l_type, x, y, attr = ''):
+    def temp_add(self, l_type, annot_type, x, y, attr = ''):
         self.temp_entry["type"] = l_type
+        self.temp_entry["annot_type"] = annot_type
         self.temp_entry['x'] = x
         self.temp_entry['y'] = y
         self.temp_entry['attr'] = attr
 
 
+    def temp_add2(self, x, y, attr = ''):
+        self.temp_entry["x1"] = x
+        self.temp_entry["y1"] = y
 
     def add_entry(self, hidden):
         if(self.state == 'main'):
@@ -253,6 +253,9 @@ class Annotation_GUI:
         self.tree['type'].append(self.temp_entry["type"])
         self.tree['x'].append(self.temp_entry['x'])
         self.tree['y'].append(self.temp_entry['y'])
+        self.tree['x1'].append(self.temp_entry['x1'])
+        self.tree['y1'].append(self.temp_entry['y1'])
+        self.tree['annot_type'].append(self.temp_entry['annot_type'])
         self.tree['attr'].append(self.temp_entry['attr'])
         self.tree['person'].append(self.person_id)
         self.tree['img_id'].append(self.img_id)

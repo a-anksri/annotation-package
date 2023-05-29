@@ -228,7 +228,7 @@ class Annotation_GUI:
           
         if(self.state == 'draw_bbox'):
 
-          self.temp_add2(x, y, '')
+          self.temp_add2(x, y)
           
   
     def temp_add(self, l_type, annot_type, x, y, attr = ''):
@@ -236,10 +236,12 @@ class Annotation_GUI:
         self.temp_entry["annot_type"] = annot_type
         self.temp_entry['x'] = x
         self.temp_entry['y'] = y
+        self.temp_entry['x1'] = -1
+        self.temp_entry['y1'] = -1
         self.temp_entry['attr'] = attr
 
 
-    def temp_add2(self, x, y, attr = ''):
+    def temp_add2(self, x, y):
         self.temp_entry["x1"] = x
         self.temp_entry["y1"] = y
 
@@ -330,7 +332,7 @@ class Annotation_GUI:
         if(self.next_link.touched):
             return(1)
         
-      #self.refresh_pane(self.current_id)
+      
     
     
     
@@ -341,9 +343,14 @@ class Annotation_GUI:
     def do_select(self, x, y):
         if(self.state == 'select'):
           self.capture(x,y)
-
-          self.state = 'confirm' 
-          #self.draw_confirmation(x,y)   
+          if(self.next_link.get_annot_type() == 'Point'):
+              self.state = 'confirm'
+          elif (self.next_link.get_annot_type() == 'Bbox'):
+              self.state = 'draw_bbox'
+        elif(self.state == 'draw_bbox'):
+          self.capture(x,y)
+          self.state = 'confirm'
+        
 
     
 

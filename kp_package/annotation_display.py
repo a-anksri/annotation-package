@@ -922,7 +922,10 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               gui.reset_alert()
               stat = False
             gui.destroy()
-            i += 1
+            if( i == max - 1):
+                pass
+            else:
+                i += 1
             next = True
             break
           
@@ -963,6 +966,11 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
            
             break
 
+          if(a == ord('q')):
+            gui.destroy()
+            next = False
+            jump = True
+            break
           
 
         if(jump):

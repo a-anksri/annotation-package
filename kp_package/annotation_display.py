@@ -586,7 +586,7 @@ def handler(event, x, y, flags, params):
             
             
             
-def show(kpoints, gui, im, review = False, remarks = '', with_tool = False):
+def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, person = ''):
 
   
   
@@ -660,8 +660,8 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
       gui.add_image(img)
 
       person_list = kp_data['person'].unique()
-      cv.namedWindow("View")
-      cv.setMouseCallback("View", handler, (gui,) )
+      cv.namedWindow(im)
+      cv.setMouseCallback(im, handler, (gui,) )
 
       status = status_data[status_data["file_name"] == im]
       remark = status["reviewer_remarks"].values[0]
@@ -679,14 +679,14 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
                 i -= 1
             continue
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), with_tool = True)
+        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), with_tool = True, person = person)
         jump = False
         stat = False
         while(True):
 
           window = gui.compose()
 
-          cv.imshow("View", window)
+          cv.imshow(im, window)
           a = cv.waitKey(20)
           if(a == ord(' ')):
 
@@ -694,7 +694,10 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               gui.reset_alert()
               stat = False
             gui.destroy()
-            i += 1
+            if( i == max - 1):
+                pass
+            else:
+                i += 1
             next = True
             break
           
@@ -731,6 +734,12 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
             else:
               i -= 1
             next = False
+            break
+
+          if(a == ord('q')):
+            gui.destroy()
+            next = False
+            jump = True
             break
 
         if(jump):
@@ -877,8 +886,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       gui.add_image(img)
 
       person_list = kp_data['person'].unique()
-      cv.namedWindow("View")
-      cv.setMouseCallback("View", handler, (gui,) )
+      cv.namedWindow(im)
+      cv.setMouseCallback(im, handler, (gui,) )
 
 
       i = 0
@@ -894,7 +903,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
                 i -= 1
             continue
         kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person))
+        show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), person = person)
         jump = False
         stat = False
         while(True):
@@ -905,7 +914,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
           window = gui.compose()
 
-          cv.imshow("View", window)
+          cv.imshow(im, window)
           a = cv.waitKey(20)
           if(a == ord(' ')):
 

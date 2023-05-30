@@ -1007,11 +1007,11 @@ class Gui:
         return self.window.copy()
         
 
-def keyboard_input(gui, person_id):
+def keyboard_input(gui, person_id, name = 'Preliminary View'):
     if(person_id == 0):
         msg = "Start Annotation. Enter Attributes for the first person ('-1' to escape)"
     else:
-        msg = "Starting New Person. Enter Attributes"
+        msg = "Starting New Person. Enter Attributes (-1 to escape)"
     text = ""
     letters = string.printable
     
@@ -1022,7 +1022,7 @@ def keyboard_input(gui, person_id):
             disp = text
         gui.add_message(msg,disp)
         window = gui.compose(pre = True)
-        cv.imshow("Preliminary", window)
+        cv.imshow(name, window)
         key = cv.waitKey(10)
         if(key == 8):
             text = text[:-1]
@@ -1032,7 +1032,7 @@ def keyboard_input(gui, person_id):
             if key == ord(letter):
                 text = text + letter
         
-    cv.destroyWindow("Preliminary")  
+    cv.destroyWindow(name)  
     return text
 
 drag = False
@@ -1168,7 +1168,7 @@ def handler(event, x, y, flags, params):
             
         
         
-def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), next_id = 0):
+def tool_GUI(img_name, All_annotations, name = 'View', img = None, window_size = (1028,768), next_id = 0):
   
   gui = Gui(window_size)
   person_id = next_id
@@ -1187,14 +1187,14 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
     annot = Annotation_GUI(landmarks, limbs, possible_duplicates, person_id = person_id, img_id = img_name)
     
     
-    attr = keyboard_input(gui, person_id)
+    attr = keyboard_input(gui, person_id, name = name)
     if(attr == '-1'):
         break
         
     annot.start_annotation(attr)
     
-    cv.namedWindow("View")
-    cv.setMouseCallback("View", handler, (annot,gui, attr) )
+    cv.namedWindow(name)
+    cv.setMouseCallback(name, handler, (annot,gui, attr) )
     gui.add_elements(annot.parent_link)
     gui.set_current_element(0)
     gui.add_message("Select a Forehead", attr)
@@ -1219,14 +1219,14 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
         if(annot.next_link.get_type() == 'Root'):
             gui.add_message("Annotation Complete","Press 'a' to save and add person, Press 's' to save and quit, 'q' to quit without saving")
             annot.set_state('main')
-            cv.setMouseCallback("View", dummy_handler, (annot,gui) )
+            cv.setMouseCallback(name, dummy_handler, (annot,gui) )
             complete = True
         
         gui.cx, gui.cy, gui.cz = annot.traverse(annot.current_parent)
         window = gui.compose()
             
         
-        cv.imshow("View", window)
+        cv.imshow(name, window)
         
             
         a = cv.waitKey(20)
@@ -1236,9 +1236,9 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
             gui.reset_dialog()
             
             if(out == 1):
-                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr)
+                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             else:
-                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr)
+                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             gui.reset_dialog()
             
             gui.flush_canvas()
@@ -1251,9 +1251,9 @@ def tool_GUI(img_name, All_annotations, img = None, window_size = (1028,768), ne
                     
                     
             if(out == 1):
-                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr)
+                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             else:
-                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr)
+                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             gui.reset_dialog()
             
             gui.flush_canvas()

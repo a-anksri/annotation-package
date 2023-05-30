@@ -916,15 +916,20 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
           cv.imshow(im, window)
           a = cv.waitKey(20)
+          
           if(a == ord(' ')):
 
             if(stat):
               gui.reset_alert()
               stat = False
             gui.destroy()
-            i += 1
+            if( i == max - 1):
+                pass
+            else:
+                i += 1
             next = True
             break
+ 
           
           if(a == ord('d') and stat == True):
               exp = map(operator.or_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
@@ -963,7 +968,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
            
             break
 
-          
+          if(a == ord('q')):
+            gui.destroy()
+            next = False
+            jump = True
+            break          
+
 
         if(jump):
             break

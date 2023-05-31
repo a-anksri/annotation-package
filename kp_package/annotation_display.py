@@ -612,7 +612,7 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
       if(review):
           gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(remarks + ": " + text, "Space: next person, p: orevious person, t: toggle landmarks, l: toggle limbs, d: delete person")
+          gui.add_message(remarks + ": " + text, "Space: Next Person, p: previous, t: toggle landmarks, l: toggle limbs, q: Quit, d: delete person")
       continue
     else:
       point = Point(idx, pid, x, y, typ, hidden, attr)

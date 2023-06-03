@@ -610,9 +610,9 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
       if(with_tool):
         remarks = "REVIEW - " + remarks
       if(review):
-          gui.add_message(text, "Space: next person in image, t: hide annotations, l: toggle limb, n: next image")
+          gui.add_message(text, "Space: Next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(remarks + ": " + text, "Space: next person, p: orevious person, t: toggle landmarks, l: toggle limbs, d: delete person")
+          gui.add_message(remarks + ": " + text, "Space: Next person, p: Previous, t: toggle landmarks, l: toggle limbs, d: delete person, q: Quit")
       continue
     else:
       point = Point(idx, pid, x, y, typ, hidden, attr)
@@ -672,11 +672,18 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
       next = True
       while(i < max):
         person = person_list[i]
+        if(len(deleted_list) == max):
+            break
+
         if(person in deleted_list):
             if(next):
                 i += 1
+                if(i == max):
+                    i = 0
             else:
                 i -= 1
+                if(i < 0):
+                    i = max - 1
             continue
         kpoints = kp_data[kp_data["person"] == person]
         show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), with_tool = True, person = person)
@@ -695,7 +702,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               stat = False
             gui.destroy()
             if( i == max - 1):
-                pass
+                i = 0
             else:
                 i += 1
             next = True
@@ -711,6 +718,8 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               gui.destroy()
               deleted_list.append(person)
               i += 1
+              if(i == max):
+                    i = 0
               break
           elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
@@ -730,7 +739,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
           if(a == ord('p')):
             gui.destroy()
             if(i == 0):
-              pass
+              i = max - 1
             else:
               i -= 1
             next = False
@@ -896,11 +905,19 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       next = True
       while(i < max):
         person = person_list[i]
+
+        if(len(deleted_list) == max):
+            break
+
         if(person in deleted_list):
             if(next):
                 i += 1
+                if(i == max):
+                    i = 0
             else:
                 i -= 1
+                if(i == 0):
+                    i = max - 1
             continue
         kpoints = kp_data[kp_data["person"] == person]
         show(kpoints, gui,im, remarks = remark + " || Showing Person {}".format(person), person = person)
@@ -923,9 +940,10 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               stat = False
             gui.destroy()
             if( i == max - 1):
-                pass
+                i = 0
             else:
                 i += 1
+ 
             next = True
             break
           
@@ -939,6 +957,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               gui.destroy()
               deleted_list.append(person)
               i += 1
+              if(i == max):
+                   i = 0
               break
           elif(a == ord('d') and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
@@ -959,7 +979,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
           if(a == ord('p')):
             gui.destroy()
             if(i == 0):
-              pass
+              i = max - 1
             else:
               i -= 1
             next = False

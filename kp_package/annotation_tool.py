@@ -4,8 +4,8 @@ import cv2 as cv
 import sys
 import string
 import os
-from annotation_structure import *
-from annotation_gui import *
+from kp_package.annotation_structure import *
+from kp_package.annotation_gui import *
 
 
 

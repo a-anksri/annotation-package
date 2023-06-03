@@ -48,6 +48,7 @@ def keyboard_input(gui, person_id, name = 'Preliminary View'):
 #Some global Variables
 
 drag = False		#Whether image pane is in pan mode
+
 ix = 0
 iy = 0
 
@@ -62,6 +63,14 @@ def handler(event, x, y, flags, params):
     gui = params[1]
     text = params[2]
     state = annot.get_state()
+    if(state == 'draw_bbox'):
+        bbox = True
+    else:
+        bbox = False
+    if(annot.next_link.get_annotation_type() == 'Bbox'):
+        type_bbox = True
+    else:
+        type_bbox = False
     
     if(event == cv.EVENT_RBUTTONUP):
         out = gui.check_within_image(x,y)
@@ -92,6 +101,13 @@ def handler(event, x, y, flags, params):
             if(out):
                 
                 gui.pan(ix - x, iy - y)
+            return
+
+        if(bbox):
+            out = gui.check_within_image(x,y)
+            if(out):
+                
+                gui.update_bbox(x,y)
                 
     
     
@@ -104,12 +120,16 @@ def handler(event, x, y, flags, params):
             
             return
         
+
+
+
         if(gui.dialog_on):
             num = gui.check_within_buttons(x,y)
             if(num > -1):
                 
                 if(num == 0):
                     out = annot.do_confirm(num)
+                    gui.reset_bbox_on()
                     
                     
                     if(out == 1):
@@ -123,6 +143,7 @@ def handler(event, x, y, flags, params):
                     
                 elif(num == 1):
                     out = annot.do_confirm(num)
+                    gui.reset_bbox_on()
                     if(out == 1):
                         gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Selection Recorded")
                     else:
@@ -132,6 +153,7 @@ def handler(event, x, y, flags, params):
                     
                 else:
                     out = annot.dont_confirm()
+                    gui.reset_bbox_on()
                     if(out == 1):
                         gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Selection Cancelled")
                     else:
@@ -173,9 +195,16 @@ def handler(event, x, y, flags, params):
         
         if(out):
             gui.current_selx, gui.current_sely = x1, y1
-            
-            gui.add_dialog(x,y)
             annot.do_select(x1,y1)
+            if(not type_bbox):
+                gui.add_dialog(x,y)
+            else:
+                if(not bbox):
+                    gui.set_bbox_on(x1, y1)
+        
+                else:
+                    gui.freeze_bbox(x1, y1)
+            
             
             
         

@@ -72,6 +72,14 @@ class Gui:
         self.cy = []
         self.cz = []
         self.current_link = None
+        self.current_annotation_type = "Point"
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
+        self.bbox_on = False
+        self.bbox_frozen = False
+
         
         #Buttons of confirmation dialog box
         self.buttons = []
@@ -139,6 +147,32 @@ class Gui:
         self.menu_pane = self.menu_pane_base.copy()
         self.message_pane = self.message_pane_base.copy()
         self.dialog_pane = self.dialog_base.copy()
+
+
+    def set_bbox_on(self, x, y):
+        self.bbox_on = True
+        self.bbox_frozen = False
+        self.x1 = x
+        self.y1 = y
+
+    def freeze_bbox(self, x, y):
+        self.bbox_on = True
+        self.bbox_frozen = True
+        self.x2 = x
+        self.y2 = y
+
+    def update_bbox(self, x, y):
+        if(self.bbox_on and not self.bbox_frozen)
+        self.x2 = x
+        self.y2 = y
+
+    def reset_bbox_on(self):
+        self.bbox_on = False
+        self.bbox_frozen = False
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
         
     #Show dialog box for confirmation of selection  
     def add_dialog(self,x,y, typ = 0):
@@ -321,7 +355,12 @@ class Gui:
                 else:
                     self.paint(x,y, z, typ = 2)
         
-        self.draw_selection()
+
+        if(self.bbox_on):
+             self.draw_bbox(frozen = self.bbox_frozen)
+        else:
+             self.draw_selection()
+
         im_width = int(min(sc_width, self.image_size[0]))
         im_height = int(min(sc_height, self.image_size[1]))
         cp = self.scaled_canvas[self.y_pan:self.y_pan + im_height, self.x_pan:self.x_pan + im_width,:]
@@ -375,6 +414,20 @@ class Gui:
         if(self.dialog_on):
             x, y = self.unscale_coords(self.current_selx, self.current_sely)
             self.draw_circle(self.scaled_canvas, x, y, 4)
+
+    
+        if(self.bbox_on):
+            self.draw_bbox()
+
+    def draw_bbox(self, is_frozen):
+        if(is_frozen):
+            thickness = 3
+        else:
+            thickness = 1
+        x1, y1 = self.unscale_coords(self.x1, self.y1)
+        x2, y2 = self.unscale_coords(self.x2, self.y2)
+        cv.rectangle(self.scaled_canvas, (x1, y1), (x2,y2), (0,255,0), thickness) 
+
         
     
     def draw_circle(self, pane, x,y, typ = 0):

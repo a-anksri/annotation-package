@@ -7,10 +7,10 @@ import os
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
+landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
+limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
 possible_duplicates = [1,11,12,13,14]
-annotation_types = ["Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point"]
+annotation_types = ["Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Bbox"]
 
 
 class Link:
@@ -56,6 +56,7 @@ class Chain:
     self.possible_duplicates = possible_duplicates
     self.annotation_types = annotation_types
     self.links = {}
+    print(self.landmarks)
  
     for i, landmark in enumerate(self.landmarks):
       annotation_type = annotation_types[i]
@@ -89,7 +90,7 @@ class Chain:
 class Final_Annotation():
 
   def __init__(self):
-    self.annotations = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [], "y1": [] "attr":[], "person":[], "img_id":[], "hidden":[], "annotation_type" : []}
+    self.annotations = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [], "y1": [], "attr":[], "person":[], "img_id":[], "hidden":[], "annotation_type" : []}
     self.next_id = 0
     self.roots = []
 
@@ -103,7 +104,7 @@ class Final_Annotation():
 class Annotation_GUI:
 
     def __init__(self, landmarks, limbs, possible_duplicates, annotation_types, person_id = -1, img_id = 'I-1'):
-        self.tree = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [], "y1": [] "attr":[], "person":[], "img_id":[], "hidden":[], "annotation_type" : [], "children : []}
+        self.tree = {"id":[],"pid":[], "type": [], "x":[], "y": [], "x1" : [], "y1": [], "attr":[], "person":[], "img_id":[], "hidden":[], "annotation_type" : [], "children" : []}
         self.count = 0
         self.landmarks = landmarks
         self.img_id = img_id
@@ -121,18 +122,15 @@ class Annotation_GUI:
         self.current_parent = None
         self.img = None
 
-'''
+
         self.pane = np.zeros((256,256, 3), np.uint8)
         self.temp_pane = None
         self.menu = None
-        self.menuText =
-'''
+        
         self.temp_entry = {} 
         self.over = False
         self.state = 'main'
-'''
-        self.elements = []
-'''
+
 
 
 #get/set state variable
@@ -225,12 +223,15 @@ class Annotation_GUI:
 
         elif(self.state == 'draw_bbox'):
           self.temp_add2(x, y)
+          self.state = 'confirm'
   
     def temp_add(self, l_type, x, y, annot_type, attr = ''):
         self.temp_entry["type"] = l_type
         self.temp_entry["annotation_type"] = annot_type
         self.temp_entry['x'] = x
         self.temp_entry['y'] = y
+        self.temp_entry['x1'] = -1
+        self.temp_entry['y1'] = -1
         self.temp_entry['attr'] = attr
 
     def temp_add2(self, x, y): 
@@ -279,6 +280,7 @@ class Annotation_GUI:
 
     #Logic for Annotation Progression
     def do_confirm(self, i):
+        
         
         if(self.state != 'confirm'):
             return(-1)

@@ -8,8 +8,8 @@ from kp_package.annotation_structure import *
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
+landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
+limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20, 4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
 possible_duplicates = [1,11,12,13,14]
 
 
@@ -150,23 +150,27 @@ class Gui:
 
 
     def set_bbox_on(self, x, y):
+        
         self.bbox_on = True
         self.bbox_frozen = False
-        self.x1 = x
-        self.y1 = y
+        self.x1 = x - 1
+        self.y1 = y + 1
+        self.x2 = x
+        self.y2 = y
 
     def freeze_bbox(self, x, y):
         self.bbox_on = True
         self.bbox_frozen = True
-        self.x2 = x
-        self.y2 = y
+        #self.x2 = x
+        #self.y2 = y
 
     def update_bbox(self, x, y):
-        if(self.bbox_on and not self.bbox_frozen)
-        self.x2 = x
-        self.y2 = y
+        if(self.bbox_on and not self.bbox_frozen):
+            self.x2 = x
+            self.y2 = y
 
     def reset_bbox_on(self):
+        
         self.bbox_on = False
         self.bbox_frozen = False
         self.x1 = 0
@@ -357,7 +361,7 @@ class Gui:
         
 
         if(self.bbox_on):
-             self.draw_bbox(frozen = self.bbox_frozen)
+             self.draw_bbox(is_frozen = self.bbox_frozen)
         else:
              self.draw_selection()
 
@@ -416,17 +420,16 @@ class Gui:
             self.draw_circle(self.scaled_canvas, x, y, 4)
 
     
-        if(self.bbox_on):
-            self.draw_bbox()
 
     def draw_bbox(self, is_frozen):
         if(is_frozen):
-            thickness = 3
+            thickness = 2
+            color = (0,255,0)
         else:
             thickness = 1
-        x1, y1 = self.unscale_coords(self.x1, self.y1)
-        x2, y2 = self.unscale_coords(self.x2, self.y2)
-        cv.rectangle(self.scaled_canvas, (x1, y1), (x2,y2), (0,255,0), thickness) 
+            color = (255,0,0)
+        
+        cv.rectangle(self.scaled_canvas, (self.x1 - self.imx1 + self.x_pan, self.y1 - self.imy1 + self.y_pan), (self.x2 - self.imx1 + self.x_pan, self.y2 - self.imy1 + self.y_pan), color, thickness) 
 
         
     

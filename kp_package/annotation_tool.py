@@ -9,8 +9,8 @@ from kp_package.annotation_gui import *
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
+landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
+limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20, 4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
 possible_duplicates = [1,11,12,13,14]
 
 
@@ -163,7 +163,7 @@ def handler(event, x, y, flags, params):
                 gui.flush_canvas()
                   
                 gui.add_elements(annot.parent_link)
-                    
+                  
             return
         
         
@@ -195,15 +195,17 @@ def handler(event, x, y, flags, params):
         
         if(out):
             gui.current_selx, gui.current_sely = x1, y1
-            annot.do_select(x1,y1)
-            if(not type_bbox):
+            annot.do_select(x1, y1)
+            if(annot.get_state() == 'confirm'):
                 gui.add_dialog(x,y)
-            else:
-                if(not bbox):
-                    gui.set_bbox_on(x1, y1)
-        
-                else:
-                    gui.freeze_bbox(x1, y1)
+                if(type_bbox):
+                    gui.freeze_bbox(x, y)
+            elif(annot.get_state() == 'draw_bbox'):
+                gui.set_bbox_on(x, y)
+                
+            
+     
+      
             
             
             
@@ -227,7 +229,7 @@ def tool_GUI(img_name, All_annotations, name = 'View', img = None, window_size =
   
   while(True):
     
-    annot = Annotation_GUI(landmarks, limbs, possible_duplicates, person_id = person_id, img_id = img_name)
+    annot = Annotation_GUI(landmarks, limbs, possible_duplicates, annotation_types, person_id = person_id, img_id = img_name)
     
     
     attr = keyboard_input(gui, person_id, name = name)

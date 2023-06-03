@@ -916,7 +916,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
                     i = 0
             else:
                 i -= 1
-                if(i == 0):
+                if(i < 0):
                     i = max - 1
             continue
         kpoints = kp_data[kp_data["person"] == person]

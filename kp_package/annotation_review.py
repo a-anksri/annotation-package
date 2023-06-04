@@ -38,13 +38,16 @@ class Element:
 
 class Point:
     
-    def __init__(self, id, pid, x, y, typ, hidden, attr):
+    def __init__(self, id, pid, x, y, x1, y1, typ, hidden, annot_type, attr):
         self.id = id
         self.pid = pid
         self.x = x
         self.y = y
+        self.x1 = x1
+        self.y1 = y1
         self.typ = typ
         self.hidden = hidden
+        self.annot_type = annot_type
         self.attr = attr
         self.parent_x = 0
         self.parent_y = 0
@@ -59,8 +62,10 @@ class Point:
       true_x = x
       true_y = y
       
-      if(self.x - true_x > -9) and (self.x - true_x < 9) and (self.y - true_y > -9) and (self.y - true_y < 9):
-        return(True)
+      if(self.x - true_x > -9) and (self.x - true_x < 9) and (self.y - true_y > -9) and (self.y - true_y < 9) and (self.annot_type == 'Point'):
+          return(True)
+      elif((self.x - true_x) * (self.x1 - true_x) < 0) and ((self.y - true_y) * (self.y1 - true_y) < 0) and (self.annot_type == 'Bbox'):
+          return(True)
       else:
         return(False)
 
@@ -276,13 +281,17 @@ class Display_GUI:
       for point in self.points:
           
         scaled_x,scaled_y = self.unscale_coords(point.x, point.y)
-        if(point.hidden == True):
-          self.draw_circle(self.scaled_canvas,scaled_x,scaled_y,typ = 1)
+        scaled_x1,scaled_y1 = self.unscale_coords(point.x1, point.y1)
+        if(point.annot_type == 'Bbox'):
+            self.paint_bbox(self.scaled_canvas, scaled_x,scaled_y,scaled_x1,scaled_y1)
         else:
-          self.draw_circle(self.scaled_canvas,scaled_x,scaled_y,typ = 3)
+          if(point.hidden == True):
+              self.draw_circle(self.scaled_canvas,scaled_x,scaled_y,typ = 1)
+          else:
+              self.draw_circle(self.scaled_canvas,scaled_x,scaled_y,typ = 3)
 
       #Draw limbs
-        if(point.p_is_forehead) or (point.is_forehead):
+        if(point.p_is_forehead) or (point.is_forehead) or (point.annot_type == 'Bbox'):
           pass
         else:
           if(self.show_limb):
@@ -290,7 +299,12 @@ class Display_GUI:
             self.draw_line(self.scaled_canvas, scaled_x, scaled_y, scaled_px, scaled_py)
 
 
-    
+    def paint_bbox(self, pane, x, y, x1, y1):
+
+
+        cv.rectangle(pane, (x,y), (x1, y1), (0,255,255), 2)    
+
+
     #Compose the image pane
     def compose_image(self, pre = False):
         scale = self.scale
@@ -491,6 +505,9 @@ class Display_GUI:
         
     
         
+        
+    
+        
 drag = False
 on_alert = False
 ix = 0
@@ -585,34 +602,38 @@ def handler(event, x, y, flags, params):
             
             
             
-def show(kpoints, gui, im, review = True, remarks = ''):
+def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, person = ''):
 
   
   
 
   xs = kpoints['x'].values
   ys = kpoints['y'].values
+  x1s = kpoints['x1'].values
+  y1s = kpoints['y1'].values
   types = kpoints['type'].values
   ids = kpoints['id'].values
   pids = kpoints['pid'].values
   hiddens = kpoints['hidden'].values
+  annot_types = kpoints['annotation_type'].values
   attrs = kpoints['attr'].values
   b_ids = ids.copy()
   
-  for x,y,typ, idx, pid, hidden, attr in zip(xs, ys, types, ids, pids, hiddens, attrs):
+  for x,y,x1, y1, typ, idx, pid, hidden, annot_type, attr in zip(xs, ys, x1s, y1s, types, ids, pids, hiddens, annot_types, attrs):
     
     
     if(idx == 0):
       att = str(attr)
       typ = str(typ)
       text = att
+ 
       if(review):
-          gui.add_message(remarks + ": " + text , "Space: next person, p: previous person, t: toggle landmarks, l: toggle limbs")
+          gui.add_message(text, "Space: Next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(text + ": " + remarks)
+          gui.add_message(remarks + ": " + text, "Space: Next person, p: Previous, t: toggle landmarks, l: toggle limbs, d: delete person, q: Quit")
       continue
     else:
-      point = Point(idx, pid, x, y, typ, hidden, attr)
+      point = Point(idx, pid, x, y, x1, y1, typ, hidden, annot_type, attr)
       gui.add_point(point)
     
     if(pid == 0):
@@ -641,6 +662,7 @@ def show(kpoints, gui, im, review = True, remarks = ''):
                 point.p_is_forehead = True
           break
       
+        
         
       
 
@@ -714,39 +736,66 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
       i = 0
       max = len(person_list)
+      
+      next = True
       while(i < max):
         person = person_list[i]
-        kpoints = kp_data[kp_data["person"] == person]
-        show(kpoints, gui,im, remarks = "|| Showing Person {}".format(person))
-        jump = False
         
+
+
+        kpoints = kp_data[kp_data["person"] == person]
+        show(kpoints, gui,im, remarks = "|| Showing Person {}".format(person), with_tool = True, person = person)
+        jump = False
+        stat = False
         while(True):
 
           window = gui.compose()
 
-          cv.imshow("View", window)
+          cv.imshow(im, window)
           a = cv.waitKey(20)
           if(a == ord(' ')):
+
+            if(stat):
+              gui.reset_alert()
+              stat = False
             gui.destroy()
-            i += 1
+            if( i == max - 1):
+                i = 0
+            else:
+                i += 1
+            next = True
             break
-          if(a == ord('t')):
+          
+              
+              
+          if(a == ord('t') or a == ord('T')):
             gui.toggle_annotations()
-          if(a == ord('l')):
+            if(stat):
+              gui.reset_alert()
+              stat = False
+          if((a == ord('l') or a == ord('L'))):
             gui.toggle_limb()
-          if(a == ord('p')):
+            if(stat):
+              gui.reset_alert()
+              stat = False
+          if(a == ord('p') or a == ord('P')):
             gui.destroy()
             if(i == 0):
-              pass
+              i = max - 1
             else:
               i -= 1
-           
+            next = False
             break
 
-          
+          if(a == ord('q') or a == ord('Q')):
+            gui.destroy()
+            next = False
+            jump = True
+            break
 
         if(jump):
             break
+
 
 
 

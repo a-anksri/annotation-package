@@ -21,7 +21,13 @@ Version 1.3
 Changes
 1) Minor Changes to Messages in Annotation Display
 
-Current Version
+
 Version 1.4
 Changes
 1) Minor corrections in see_annot function for proper traversal
+
+Current Version
+Version 2.0
+Changes
+1) Added Bounding Box Annotations
+2) Improvements in UI

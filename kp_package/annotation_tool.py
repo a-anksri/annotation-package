@@ -9,8 +9,8 @@ from kp_package.annotation_gui import *
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20, 4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
+landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown", "Vaahan", "Article_Left", "Article_Right"]
+limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20, 4,8,5,9,21], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18], "Left Wrist" : [22], "Right Wrist" : [23]}
 possible_duplicates = [1,11,12,13,14]
 
 
@@ -24,12 +24,17 @@ def keyboard_input(gui, person_id, name = 'Preliminary View'):
         msg = "Starting New Person. Enter Attributes (-1 to escape)"
     text = ""
     letters = string.printable
-    
+    blip = 0
     while True:
-        if len(text) == 0:
+        if len(text) == 0 and (blip < 25):
             disp = "__"
+        elif len(text) == 0 and (blip >= 25):
+            disp = ''
         else:
             disp = text
+        blip += 1
+        if(blip >= 50):
+            blip = 0
         gui.add_message(msg,disp)
         window = gui.compose(pre = True)
         cv.imshow(name, window)
@@ -72,7 +77,7 @@ def handler(event, x, y, flags, params):
     else:
         type_bbox = False
     
-    if(event == cv.EVENT_RBUTTONUP):
+    if((event == cv.EVENT_RBUTTONUP) and not bbox):
         out = gui.check_within_image(x,y)
         if(drag):
             drag = False
@@ -133,9 +138,9 @@ def handler(event, x, y, flags, params):
                     
                     
                     if(out == 1):
-                        gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), text)
+                        gui.add_message("Select another " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), text)
                     else:
-                        gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), text)
+                        gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), text)
                     gui.reset_dialog()
                     
                     
@@ -145,9 +150,9 @@ def handler(event, x, y, flags, params):
                     out = annot.do_confirm(num)
                     gui.reset_bbox_on()
                     if(out == 1):
-                        gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Selection Recorded")
+                        gui.add_message("Select another " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), "Selection Recorded")
                     else:
-                        gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Selection Recorded")
+                        gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), "Selection Recorded")
                     gui.reset_dialog()
                     
                     
@@ -155,9 +160,9 @@ def handler(event, x, y, flags, params):
                     out = annot.dont_confirm()
                     gui.reset_bbox_on()
                     if(out == 1):
-                        gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Selection Cancelled")
+                        gui.add_message("Select another " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), "Selection Cancelled")
                     else:
-                        gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "Cancelled")
+                        gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), "Cancelled")
                     gui.reset_dialog()
                     
                 gui.flush_canvas()
@@ -169,8 +174,9 @@ def handler(event, x, y, flags, params):
         
         
         gui.flush_canvas()
-        num = gui.check_within(x,y)
-        if num > -1:
+        if(not bbox):
+          num = gui.check_within(x,y)
+          if num > -1:
             
             
             annot.set_child(num)
@@ -181,13 +187,13 @@ def handler(event, x, y, flags, params):
                     return
             
     
-            gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), "")
+            gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), "")
             gui.add_elements(annot.parent_link)
             
         
         
-        num = gui.check_image_controls(x,y)
-        if (num > -1):
+          num = gui.check_image_controls(x,y)
+          if (num > -1):
             gui.image_position(num)
             
         out = gui.check_within_image(x,y)
@@ -197,7 +203,7 @@ def handler(event, x, y, flags, params):
             gui.current_selx, gui.current_sely = x1, y1
             annot.do_select(x1, y1)
             if(annot.get_state() == 'confirm'):
-                gui.add_dialog(x,y)
+                gui.add_dialog(x,y,is_bbox = type_bbox)
                 if(type_bbox):
                     gui.freeze_bbox(x, y)
             elif(annot.get_state() == 'draw_bbox'):
@@ -267,7 +273,7 @@ def tool_GUI(img_name, All_annotations, name = 'View', img = None, window_size =
             cv.setMouseCallback(name, dummy_handler, (annot,gui) )
             complete = True
         
-        gui.cx, gui.cy, gui.cz = annot.traverse(annot.current_parent)
+        gui.cx, gui.cy, gui.cx1, gui.cy1, gui.cz, gui.cz1  = annot.traverse(annot.current_parent)
         window = gui.compose()
             
         
@@ -278,60 +284,63 @@ def tool_GUI(img_name, All_annotations, name = 'View', img = None, window_size =
         
         if(annot.get_state() == 'confirm' and a == ord(' ')):
             out = annot.do_confirm(0)
-            gui.reset_dialog()
+            gui.reset_bbox_on()
+            
             
             if(out == 1):
-                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
+                    gui.add_message("Select another " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             else:
-                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
+                    gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             gui.reset_dialog()
             
             gui.flush_canvas()
                   
             gui.add_elements(annot.parent_link)
         
-        if(annot.get_state() == 'confirm' and a == ord('h')):
+        if(annot.get_state() == 'confirm' and (a == ord('h') or a == ord('H'))) and (annot.next_link.get_annotatio_type() != 'Bbox'):
             out = annot.do_confirm(1)
-            gui.reset_dialog
+            gui.reset_bbox_on()
+            
                     
                     
             if(out == 1):
-                    gui.add_message("Select another " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
+                    gui.add_message("Select another " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             else:
-                    gui.add_message("Select a " + annot.next_link.get_type() + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
+                    gui.add_message("Select a " + annot.next_link.get_type() + " [" + annot.next_link.get_annotation_type() +"] " + " connected to highlighted " + annot.parent_link.get_type(), attr + " : Press q at any time to quit current person annotation")
             gui.reset_dialog()
             
             gui.flush_canvas()
                   
             gui.add_elements(annot.parent_link)
             
-        if (a == ord('q') and complete):
+        if ((a == ord('q') or a == ord('Q')) and complete):
             to_save = False
             break
         
-        if (a == ord('q') and not complete):
+        if ((a == ord('q') or a == ord('Q')) and not complete):
+            gui.reset_bbox_on()
             gui.add_message("Annotation is incomplete", "'a': Save and add person, 's': Save and Quit, 'x' Quit without saving, 'n': add person without saving")
             alert = True
             
-        elif(a == ord('a')):
+        elif(a == ord('a') or a == ord('A')):
             to_save = True
             more = True
             added_count += 1
             break
         
-        elif(a == ord('s')):
+        elif(a == ord('s') or a == ord('S')):
             to_save = True
             more = False
             added_count += 1
   
             break
         
-        elif(a == ord('x') and alert):
+        elif((a == ord('x') or a == ord('X')) and alert):
             to_save = False
             more = False
             break
             
-        elif(a == ord('n') and alert):
+        elif((a == ord('n') or a == ord('N')) and alert):
             to_save = False
             more = True
             break

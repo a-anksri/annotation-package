@@ -10,7 +10,7 @@ import os
 landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
 limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20,4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
 possible_duplicates = [1,11,12,13,14]
-annotation_types = ["Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Bbox"]
+annotation_types = ["Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Point", "Bbox", "Bbox", "Bbox", "Bbox"]
 
 
 class Link:
@@ -374,25 +374,40 @@ class Annotation_GUI:
             cx = []
             cy = []
             cz = []
+            cx1 = []
+            cy1 = []
+            cz1 = []
             ax = []
             ay = []
             az = []
+            ax1 = []
+            ay1 = []
+            az1 = []
             children = self.tree['children'][idx]
             cx.append(self.tree['x'][idx])
             cy.append(self.tree['y'][idx])
             cz.append(self.tree['hidden'][idx])
+            cx1.append(self.tree['x1'][idx])
+            cy1.append(self.tree['y1'][idx])
+            cz1.append(self.tree['annotation_type'][idx])
             for i in children:
-                ax, ay, az = self.traverse(i)
+                ax, ay, ax1, ay1, az, az1 = self.traverse(i)
                 if(not last_only):
                     cx = cx + ax
                     cy = cy + ay
                     cz = cz + az
+                    cx1 = cx1 + ax1
+                    cy1 = cy1 + ay1
+                    cz1 = cz1 + az1
                     
                     
             if(last_only):
                 cx = cx + ax
                 cy = cy + ay
                 cz = cz + az
+                cx1 = cx1 + ax1
+                cy1 = cy1 + ay1
+                cz1 = cz1 + az1
             
-            return(cx,cy,cz)
+            return(cx,cy, cx1, cy1, cz, cz1)
             

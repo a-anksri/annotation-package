@@ -8,9 +8,6 @@ from kp_package.annotation_structure import *
 
 
 
-landmarks = ["Root", "Forehead", "Left Eye", "Left Ear", "Left Shoulder", "Left Hip", "Right Eye", "Right Ear", "Right Shoulder", "Right Hip", "Nose", "Left Elbow", "Left Knee", "Right Elbow", "Right Knee", "Left Wrist", "Left Ankle", "Right Wrist", "Right Ankle", "Mouth", "Crown"]
-limbs = {"Root":[1], "Forehead":[10,19,2,6,3,7,20, 4,8,5,9], "Left Shoulder":[11], "Left Elbow": [15], "Left Hip":[12], "Left Knee": [16], "Right Shoulder":[13], "Right Elbow": [17], "Right Hip":[14], "Right Knee": [18]}
-possible_duplicates = [1,11,12,13,14]
 
 
             
@@ -70,7 +67,10 @@ class Gui:
         self.image_controls = []
         self.cx = []
         self.cy = []
+        self.cx1 = []
+        self.cy1 = []
         self.cz = []
+        self.cz1 = []
         self.current_link = None
         self.current_annotation_type = "Point"
         self.x1 = 0
@@ -153,8 +153,8 @@ class Gui:
         
         self.bbox_on = True
         self.bbox_frozen = False
-        self.x1 = x - 1
-        self.y1 = y + 1
+        self.x1 = x - 3
+        self.y1 = y + 3
         self.x2 = x
         self.y2 = y
 
@@ -179,16 +179,21 @@ class Gui:
         self.y2 = 0
         
     #Show dialog box for confirmation of selection  
-    def add_dialog(self,x,y, typ = 0):
+    def add_dialog(self,x,y, is_bbox, typ = 0):
         
         if(typ == 0):
             #Hard coded button sizes and placement in dialog box
             self.buttons.append(Element("Visible", False,(10,110), (70,30), default = 0))
+   
             self.buttons.append(Element("Hidden", False,(110,110), (70,30), default = 1))
             self.buttons.append(Element("Cancel", False,(210,110), (70,30), default = 2))
-                            
-        for i in self.buttons:
-                self.add_to_pane(i)
+        
+                          
+        for n,i in enumerate(self.buttons):
+                if(n == 1 and is_bbox):
+                    pass
+                else:
+                    self.add_to_pane(i)
         self.dialog_on = True
         
         #Setting location of dialog box just below the cursor
@@ -286,6 +291,7 @@ class Gui:
     def reset_dialog(self):
         self.buttons = []
         self.dialog_on = False
+        self.dialog_pane = self.dialog_base.copy()
         
     #Add image control buttons
     def add_image_controls(self):
@@ -322,12 +328,15 @@ class Gui:
         self.flush_canvas()
         cp = self.canvas.copy()
         if(not self.lazy):
-            for i, lis in enumerate(zip(self.cx, self.cy, self.cz)):
-                x,y,z = lis
-                if(i == 0):
+            for i, lis in enumerate(zip(self.cx, self.cy, self.cx1, self.cy1, self.cz, self.cz1)):
+                x,y,x1, y1, z, z1 = lis
+                if(z1 != "Bbox"):
+                  if(i == 0):
                     self.paint(x,y, z, typ = 0)
-                else:
+                  else:
                     self.paint(x,y, z, typ = 2)
+                else:
+                  self.paint_bbox(x,y,x1,y1)
             
         
         width = cp.shape[1]
@@ -352,12 +361,16 @@ class Gui:
         
         self.scaled_canvas = cv.resize(cp, (sc_width, sc_height))
         if(self.lazy):
-            for i, lis in enumerate(zip(self.cx, self.cy, self.cz)):
-                x,y,z = lis
-                if(i == 0):
+            for i, lis in enumerate(zip(self.cx, self.cy, self.cx1, self.cy1, self.cz, self.cz1)):
+                x,y,x1, y1, z, z1 = lis
+                if(z1 != "Bbox"):
+                  
+                  if(i == 0):
                     self.paint(x,y, z, typ = 0)
-                else:
+                  else:
                     self.paint(x,y, z, typ = 2)
+                else:
+                  self.paint_bbox(x,y,x1,y1)
         
 
         if(self.bbox_on):
@@ -517,6 +530,7 @@ class Gui:
     #To paint circles in place of landmarks
     def paint(self, parentx, parenty, hidden, typ = 0):
         
+        
         if(self.lazy):
             pane = self.scaled_canvas
             parentx, parenty = self.unscale_coords(parentx, parenty)
@@ -529,12 +543,24 @@ class Gui:
             self.draw_circle(pane,parentx, parenty, typ = t+1)
         else:
             self.draw_circle(pane, parentx, parenty, typ = t)
+
+    def paint_bbox(self, x, y, x1, y1):
+        
+        pane = self.scaled_canvas
+        x,y = self.unscale_coords(x,y)
+        x1,y1 = self.unscale_coords(x1,y1)
+                
+        
+
+        cv.rectangle(pane, (x,y), (x1, y1), (0,255,255), 2)
         
         
      #To check if dialog box buttons are clicked    
     def check_within_buttons(self, x, y):
         
         for i, element in enumerate(self.buttons):
+            if(i == 1 and self.bbox_on):
+                continue
             if (element.has(x,y, self.dialog_offset)):
                 return(i)
             

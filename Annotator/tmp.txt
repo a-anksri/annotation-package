@@ -1,0 +1,28 @@
+annotator_id = -1
+
+root_config_path = '../../root_config'
+if(os.path.exists(root_config_path)):
+    f = open(root_config_path, 'r')
+    root_config = pickle.load(f)
+    f.close()
+    annotator_id = root_config['id']
+
+
+config_path = '../../config'
+if(os.path.exists(config_path)):
+    f = open(config_path, 'r')
+    config = pickle.load(f)
+    f.close()
+else:
+    config = {}
+
+a = input('Please Enter Annotator's Name: ')
+cid = 0
+
+config['annotator_name'] = a
+config['cid'] = cid
+config['ann_id'] = annotator_id
+
+f = open(config_path, 'w')
+pickle.dump(config, config_path)
+f.close()

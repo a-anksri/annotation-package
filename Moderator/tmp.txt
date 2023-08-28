@@ -1,0 +1,54 @@
+import pickle
+import os
+import pandas as pd
+
+if(os.path.exists('img_list'):
+    f = open('img_list', 'rb')
+    img_list = pickle.load(f)
+    f.close()
+    
+else:
+    print("no image list to allocate")
+    exit
+
+if(os.path.exists('accounts'):
+    f = open('accounts', 'rb')
+    accounts = pickle.load(f)
+    f.close()
+else:
+    print("No accounts yet")
+    exit
+
+if(os.path.exists('to_annotate'):
+    f = open('to_annotate', 'rb')
+    to_annotate = pickle.load(f)
+    f.close()
+else:
+    to_annotate = {}
+    
+
+if(os.path.exists('allocated'):
+    f = open('allocated', 'rb')
+    allocated = pickle.load(f)
+    f.close()
+    allocated = allocated[0]
+else:
+    allocated = [0]
+print(accounts)
+
+a = int(input("Enter Account id"))
+
+current_list = to_annotate[a]
+
+new_list = img_list[allocated:allocated + 100]
+current_list = current_list + new_list
+
+pd.to_csv(current
+
+
+
+
+
+f = open('accounts', 'w')
+pickle.dump(f, accounts)
+f.close()

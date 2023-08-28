@@ -805,6 +805,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
           return
 
     img_list = reviewer_dataset['img_id'].values
+    rej_list = reviewer_dataset[reviewer_dataset['is_ok'] == False]
+    rej_list = rej_list['img_id'].values
 
     sent = status_data[status_data['sent_for_review'] == True]
     completed = sent['file_name'].values
@@ -873,11 +875,12 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
     os.remove(kp_dataset_path)
     os.rename(tmp_path,kp_dataset_path)
     
-    inp = input("All Review Results Ingested. Do you want to see the individual reviews? (y/n) ")
+    inp = input("All Review Results Ingested. Do you want to see the review of rejected annotaions ? (y/n) ")
     if(inp == 'n'):
       return
 
-    for im in img_list:
+    #Only not accepted ones. To implement
+    for im in rej_list:
       if(count < 0):
         count += 1
         continue

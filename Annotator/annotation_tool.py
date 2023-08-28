@@ -1,10 +1,29 @@
+import numpy as np
+import pandas as pd
+import cv2 as cv
+import sys
+import string
+import os
+
+import pickle
+
+root_config_path = '../../annotator_data/root_config'
+if(os.path.exists(root_config_path)):
+    f = open(root_config_path, 'rb')
+    root_config = pickle.load(f)
+    f.close()
+    annotator_id = root_config['id']
+    annotator = root_config['name']
+else:
+    print('Not Configured. Please Obtain Configuration File')
+
 #Enter folder name where the images and dataset files exist
 image_folder = '../../Images'
 data_file_folder = '../../annotator_data'
-annotator = 'Nikhil'
-to_annotate_file = 'to_annotate_' + annotator + '.csv'
-keypoints_file = 'KEYPOINTS_DATASET_' + annotator + '.csv'
-status_file = 'STATUS_' + annotator + '.csv'
+
+to_annotate_file = 'to_annotate_{}'.format(annotator_id) + '.csv'
+keypoints_file = 'KEYPOINTS_DATASET_{}'.format(annotator_id) + '.csv'
+status_file = 'STATUS_{}'.format(annotator_id) + '.csv'
 
 window_size = (1028,668)
 
@@ -16,15 +35,8 @@ sys.path.append('..')
 
 #######
 
-import numpy as np
-import pandas as pd
-import cv2 as cv
-import sys
-import string
-import os
 from kp_package.annotation_tool import *
 from kp_package.annotation_display import see_annot
-
 ########
 
 #Ordinarily, you will not need to change this

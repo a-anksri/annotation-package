@@ -2,10 +2,10 @@ import pickle
 import os
 import pandas as pd
 
-if(os.path.exists('img_list'):
-    f = open('img_list', 'rb')
-    img_list = pickle.load(f)
-    f.close()
+if(os.path.exists('img_list.csv'):
+    img_data = pd.read_csv('img_list.csv', index_col = False)
+    img_list = img_data[img_data['is_allocated'] == False]
+    img_list = img_list['img_list'].values
     
 else:
     print("no image list to allocate")
@@ -19,26 +19,12 @@ else:
     print("No accounts yet")
     exit
 
-if(os.path.exists('to_annotate'):
-    f = open('to_annotate', 'rb')
-    to_annotate = pickle.load(f)
-    f.close()
-else:
-    to_annotate = {}
-    
 
-if(os.path.exists('allocated'):
-    f = open('allocated', 'rb')
-    allocated = pickle.load(f)
-    f.close()
-    allocated = allocated[0]
-else:
-    allocated = [0]
 print(accounts)
 
 a = int(input("Enter Account id"))
 
-current_list = to_annotate[a]
+new_list = img_list[0:100
 
 new_list = img_list[allocated:allocated + 100]
 current_list = current_list + new_list

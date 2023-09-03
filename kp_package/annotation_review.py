@@ -731,8 +731,8 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       gui.add_image(img)
 
       person_list = kp_data['person'].unique()
-      cv.namedWindow("View")
-      cv.setMouseCallback("View", handler, (gui,) )
+      cv.namedWindow(im)
+      cv.setMouseCallback(im, handler, (gui,) )
 
       i = 0
       max = len(person_list)

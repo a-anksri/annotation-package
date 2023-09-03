@@ -6,7 +6,9 @@ path = '../../Images'
 
 lis = os.listdir(path)
 
-data = pd.DataFrame({'img_list':lis})
+annot_ids = [-1 for x in lis]
 
-data.to_csv('img_list.csv', index_col = False)
+data = pd.DataFrame({'img_list':lis, 'annotator_id' : annot_ids})
+
+data.to_csv('annotation_list.csv', index_col = False)
 

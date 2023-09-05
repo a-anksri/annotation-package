@@ -802,16 +802,16 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
       cv.destroyAllWindows()
       ok = input("Is annotation satisfactory? (y/n/e/s). e to expunge ; s to skip review ")
-      if(ok == 's'):
+      if(ok == 's') or (ok == 'S'):
          pass
       else:
-          if (ok == 'y'):
+          if (ok == 'y') or (ok == 'Y'):
             new_record['is_ok'].append(True)
             new_record['expunge'].append(False)
             
           else:
             new_record['is_ok'].append(False)
-          if(ok == 'n'):
+          if(ok == 'n') or (ok == 'N'):
               remarks = input("Any remarks? ")
               new_record['remarks'].append(remarks)
               new_record['expunge'].append(False)        
@@ -820,12 +820,12 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           
           
           
-          if(ok == 'y'):
+          if(ok == 'y') or (ok == 'Y'):
               accepted_record = {'img_id':[im], 'accepted':[True]}
               accepted_record = pd.DataFrame(accepted_record)
               accepted = accepted.append(accepted_record, ignore_index = True)
 
-          if(ok == 'e'):
+          if(ok == 'e') or (ok == 'E'):
               expunged_record = {'img_id':[im], 'expunged':[True]}
               expunged_record = pd.DataFrame(expunged_record)
               expunged = expunged.append(expunged_record, ignore_index = True)
@@ -836,7 +836,7 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       
       b = input("show next image in folder? (y/n) ")
 
-      if(b == 'y'):
+      if(b == 'y') or (b == 'Y'):
 
         continue
       else: 

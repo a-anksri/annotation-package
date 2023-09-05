@@ -1035,7 +1035,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       
       b = input("see next review? (y/n) ")
 
-      if(b == 'y'):
+      if(b == 'y') or (b == 'Y'):
 
         continue
       else: 

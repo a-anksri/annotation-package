@@ -137,12 +137,12 @@ if(__name__ == "__main__"):
           os.rename(tmp_path,data_file_path)
         
           inp = input("Want to review annotations for this image? (y/n) ")
-          if(inp == 'y'):
+          if(inp == 'y') or (inp == 'Y'):
                 see_annot(data_file_path, status_file_path, window_size, image_folder, data_file_folder, file_name)
 
 
           q = input('Mark this image as completed? You will not be able to annotate this image further if marked completed (y/n) ')
-          if(q == 'y'):
+          if(q == 'y') or (q == 'Y'):
                     this_record = completed['file_name'] == file_name
                     completed.loc[this_record,'success'] = True
                     print("Image " + file_name + " completed")
@@ -164,7 +164,7 @@ if(__name__ == "__main__"):
                         print("No remaining Annotations for {}. Status Record Expunged".format(file_name))
         else:            
             q = input('No annotation added. Still mark this image as completed? You will not be able to annotate this image further if marked completed (y/n) ')
-            if(q == 'y'):
+            if(q == 'y') or (q == 'Y'):
                     this_record = completed['file_name'] == file_name
                     completed.loc[this_record,'success'] = True
                     print("Image " + file_name + " completed")
@@ -178,7 +178,7 @@ if(__name__ == "__main__"):
             
       
     
-      if(inp == 'y'):
+      if(inp == 'y') or (inp == 'Y'):
         continue
       else:
         break

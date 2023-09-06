@@ -1,5 +1,6 @@
 import pickle
 import os
+import sys
 
 image_folder = '../../Images'
 data_file_folder = '../../annotator_data'
@@ -74,7 +75,10 @@ for im in all:
 
 
 
-
+if(len(kp_dataset) == 0):
+    print("No completed Annotations available for offer")
+    sys.exit()
+    
 kp_dataset.to_csv(offered_path, index = False)
 
 status.to_csv(status_path, index = False)
@@ -86,4 +90,3 @@ config['cid'] = cid
 f = open(config_path, 'wb')
 pickle.dump(config, f)
 f.close()
-

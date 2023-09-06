@@ -38,13 +38,13 @@ if(len(results_files) == 1):
     review_file = results_files[0]
 elif(len(results_files) == 0):
     print("No results to ingest")
-    exit
+    sys.exit()
 else:
   print(results_files)
   a = int(input("Enter Sl No of the results file you want to ingest"))
   if(a < 0 or a > len(results_files)):
     print("Invalid input")
-    exit
+    sys.exit()
   review_file = results_files[a]
 
 status_file = 'STATUS_{}'.format(annotator_id) +'.csv'

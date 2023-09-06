@@ -55,10 +55,11 @@ if(__name__ == "__main__"):
     if(os.path.exists(to_annotate_path)):
       #If list of images to be annotated has been provided
       tmp = pd.read_csv(to_annotate_path)
-      file_names = tmp['img_id'].values
+      tmp = tmp[tmp['annotator_id'] == annotator_id]
+      file_names = tmp['img_list'].values
     else:
       #else take all images from the images folder
-      file_names = os.listdir(image_folder)
+      print("No to_annotate list available ")
     
 
     if(os.path.exists(data_file_path)):
@@ -84,7 +85,10 @@ if(__name__ == "__main__"):
     expunged_files = completed[completed['expunge'] == True]
     expunged_files = expunged_files['file_name'].values
     
-    
+    if (len(file_names) < 1):
+        print("No more images to annotate")
+        sys.exit()
+        
     for file_name in file_names:
 
       #To skip annotated images and non image files
@@ -184,5 +188,6 @@ if(__name__ == "__main__"):
         break
 
       print(completed['file_name'].values)
+
 
 

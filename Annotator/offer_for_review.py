@@ -19,7 +19,7 @@ else:
     print('Not Configured. Please Obtain Configuration File')
 
 
-config_path = '../../config'
+config_path = '../../annotator_data/config'
 if(os.path.exists(config_path)):
     f = open(config_path, 'rb')
     config = pickle.load(f)
@@ -83,6 +83,7 @@ cid += 1
 
 config['cid'] = cid
 
-f = open('config_path', 'wb')
+f = open(config_path, 'wb')
 pickle.dump(config, f)
 f.close()
+

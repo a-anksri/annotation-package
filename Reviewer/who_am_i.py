@@ -7,7 +7,7 @@ import os
 
 import pickle
 
-root_config_path = '../../annotator_data/root_config'
+root_config_path = '../../reviewer_data/root_config'
 if(os.path.exists(root_config_path)):
     f = open(root_config_path, 'rb')
     root_config = pickle.load(f)
@@ -19,4 +19,4 @@ else:
     
 print("Name: " + annotator)
 print("Id: {}".format(annotator_id))
-print("Role: Annotator")
+print("Role: Reviewer")

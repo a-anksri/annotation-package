@@ -18,7 +18,7 @@ else:
     print('Not Configured. Please Obtain Configuration File')
 
 #Enter folder name where the images and dataset files exist
-image_folder = '../../Images'
+image_folder = '../../../Images'
 data_file_folder = '../../annotator_data'
 
 to_annotate_file = 'to_annotate_{}'.format(annotator_id) + '.csv'

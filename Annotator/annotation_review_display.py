@@ -8,7 +8,7 @@ import os
 
 
 #Enter folder name where the images and dataset files exist
-image_folder = '../../Images'
+image_folder = '../../../Images'
 data_file_folder = '../../annotator_data'
 
 #######Added in py file

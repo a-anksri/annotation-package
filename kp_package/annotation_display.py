@@ -259,8 +259,8 @@ class Display_GUI:
         elif(typ == 2):
             cv.circle(pane, (x,y), 3, (0,128,255), 2)
         elif(typ == 3):
-            cv.circle(pane, (x,y), 3, (0,255,255), -1)
-            cv.circle(pane, (x,y), 6, (0,255,0), 2)
+            cv.circle(pane, (x,y), 3, (0,255,0), -1)
+            cv.circle(pane, (x,y), 6, (0,255,255), 2)
         elif(typ == 4):
             cv.circle(pane, (x,y), 3, (255,0,0), 2)
     

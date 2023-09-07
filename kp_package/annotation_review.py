@@ -489,7 +489,11 @@ class Display_GUI:
     def get_name(self, lis):
       text = ''
       for id in lis:
-            text = text + " " + self.points[id].typ + ", "
+            if(self.points[id].hidden):
+                 disp = "[H]"
+            else:
+                 disp = "[V]"
+            text = text + " " + self.points[id].typ + disp + ", "
       
       return(text)
     

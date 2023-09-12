@@ -811,16 +811,17 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       else:
           if (ok == 'y') or (ok == 'Y'):
             new_record['is_ok'].append(True)
-            new_record['expunge'].append(False)
+            
             
           else:
             new_record['is_ok'].append(False)
           if(ok == 'n') or (ok == 'N'):
               remarks = input("Any remarks? ")
               new_record['remarks'].append(remarks)
-              new_record['expunge'].append(False)        
+                  
           else:
             new_record['remarks'].append('Accepted')
+            
           
           
           
@@ -834,6 +835,8 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
               expunged_record = pd.DataFrame(expunged_record)
               expunged = expunged.append(expunged_record, ignore_index = True)
               new_record['expunge'].append(True)
+          else:
+              new_record['expunge'].append(False)
      
           new_record = pd.DataFrame(new_record)
           reviewer_dataset = reviewer_dataset.append(new_record, ignore_index = True)

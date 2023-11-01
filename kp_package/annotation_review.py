@@ -670,14 +670,14 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
         
       
 
-def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, expunge_file_path, window_size, image_folder, reviewer):
+def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, expunge_file_path, window_size, image_folder, reviewer, keypoints_file):
     kp_dataset = pd.read_csv(kp_dataset_path, index_col = False)
 
     if(os.path.exists(accepted_file_path)):
       accepted = pd.read_csv(accepted_file_path, index_col = False)
       accepted_list = accepted['img_id'].values
     else:
-      accepted = pd.DataFrame(columns = ['img_id', 'accepted'])
+      accepted = pd.DataFrame(columns = ['img_id', 'accepted', 'Offered_file'])
       accepted.to_csv(accepted_file_path, index = False)
       accepted_list = []
 
@@ -685,7 +685,7 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       expunged = pd.read_csv(expunge_file_path, index_col = False)
       expunged_list = expunged['img_id'].values
     else:
-      expunged = pd.DataFrame(columns = ['img_id', 'expunged'])
+      expunged = pd.DataFrame(columns = ['img_id', 'expunged', 'Offered_file'])
       expunged.to_csv(expunge_file_path, index = False)
       expunged_list = []
 
@@ -705,14 +705,12 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
     gui = Display_GUI(window_size)
     gui.add_image_controls()
-    start = input("Enter starting number of first image to review")
+    #start = input("Enter starting number of first image to review")
 
     count = 0
 
     for im in img_list:
-      if(count < int(start)):
-        count += 1
-        continue
+      
 
       if(im in done):
           continue
@@ -826,12 +824,12 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           
           
           if(ok == 'y') or (ok == 'Y'):
-              accepted_record = {'img_id':[im], 'accepted':[True]}
+              accepted_record = {'img_id':[im], 'accepted':[True], 'Offered_file':[keypoints_file]}
               accepted_record = pd.DataFrame(accepted_record)
               accepted = accepted.append(accepted_record, ignore_index = True)
 
           if(ok == 'e') or (ok == 'E'):
-              expunged_record = {'img_id':[im], 'expunged':[True]}
+              expunged_record = {'img_id':[im], 'expunged':[True], 'Offered_file':[keypoints_file]}
               expunged_record = pd.DataFrame(expunged_record)
               expunged = expunged.append(expunged_record, ignore_index = True)
               new_record['expunge'].append(True)
@@ -841,6 +839,10 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
           new_record = pd.DataFrame(new_record)
           reviewer_dataset = reviewer_dataset.append(new_record, ignore_index = True)
       
+      reviewer_dataset.to_csv(review_file_path, index = False)
+      accepted.to_csv(accepted_file_path, index = False)
+      expunged.to_csv(expunge_file_path, index = False)
+
       b = input("show next image in folder? (y/n) ")
 
       if(b == 'y') or (b == 'Y'):

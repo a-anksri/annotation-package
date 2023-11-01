@@ -6,6 +6,8 @@ import string
 import os
 import operator
 
+from kp_package.io import write
+
 class Element:
     
     def __init__(self,text, duplicate, offset, dim, default = 0):
@@ -259,8 +261,8 @@ class Display_GUI:
         elif(typ == 2):
             cv.circle(pane, (x,y), 3, (0,128,255), 2)
         elif(typ == 3):
-            cv.circle(pane, (x,y), 3, (0,255,0), -1)
-            cv.circle(pane, (x,y), 6, (0,255,255), 2)
+            cv.circle(pane, (x,y), 3, (0,255,255), -1)
+            cv.circle(pane, (x,y), 6, (0,255,0), 2)
         elif(typ == 4):
             cv.circle(pane, (x,y), 3, (255,0,0), 2)
     
@@ -490,11 +492,7 @@ class Display_GUI:
     def get_name(self, lis):
       text = ''
       for id in lis:
-            if(self.points[id].hidden):
-                 disp = "[H]"
-            else:
-                 disp = "[V]"
-            text = text + " " + self.points[id].typ + disp + ", "
+            text = text + " " + self.points[id].typ + ", "
       
       return(text)
     
@@ -670,6 +668,7 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
 
 
 def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data_file_folder, im):
+      dirty = False
       kp_dataset = pd.read_csv(kp_dataset_path)
       status_data = pd.read_csv(status_file_path, index_col = False)
       gui = Display_GUI(window_size)
@@ -734,6 +733,7 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
               kp_dataset = kp_dataset.loc[exp]
               exp = status_data['file_name'] == im
               status_data.loc[exp, 'success'] = False
+              dirty = True
               stat = False
               gui.reset_alert()
               gui.destroy()
@@ -785,14 +785,25 @@ def see_annot(kp_dataset_path, status_file_path, window_size, image_folder, data
       if(len(new_list) == 0):
         kp_dataset = kp_dataset[kp_dataset['img_id'] != im]
         status_data = status_data[status_data['file_name'] != im]
+        dirty = True
         print("All persons deleted for this image. Status Record expunged")
         
         
-      tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
-      kp_dataset.to_csv(tmp_path, index = False)
+      # tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
+
+      stat = write('pandas', kp_dataset, kp_dataset_path)
+      if(not stat):
+        return(False)
+
+      stat = write('pandas', status_data, status_file_path)
+      if(not stat):
+        return(False)
+      dirty = False
+    
+      '''kp_dataset.to_csv(tmp_path, index = False)
       status_data.to_csv(status_file_path, index = False)
       os.remove(kp_dataset_path)
-      os.rename(tmp_path,kp_dataset_path)
+      os.rename(tmp_path,kp_dataset_path)'''
 
     
 
@@ -873,11 +884,20 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
               expunged.append(im)
 
 
-    tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
+    stat = write('pandas', kp_dataset, kp_dataset_path)
+    if(not stat):
+        return(False)
+
+    stat = write('pandas', status_data, status_file_path)
+    if(not stat):
+        return(False)
+    dirty = False
+                
+    '''tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
     kp_dataset.to_csv(tmp_path, index = False)
     status_data.to_csv(status_file_path, index = False)
     os.remove(kp_dataset_path)
-    os.rename(tmp_path,kp_dataset_path)
+    os.rename(tmp_path,kp_dataset_path)'''
     
     inp = input("All Review Results Ingested. Do you want to see the review of rejected annotaions ? (y/n) ")
     if(inp == 'n'):
@@ -900,7 +920,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
         continue
 
       if(im in expunged):
-        print("image {} has been expunged from landmark dataset by reviewer. Discuss with reviewer".format(im))
+        
         continue
 
       item = reviewer_dataset[reviewer_dataset['img_id'] == im]
@@ -971,7 +991,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
             next = True
             break
           
-          if((a == ord('d') or a == ord('D')) and stat == True):
+          #Removing the option to delete persons at this stage. Any alterations should be done through annotation_tool/see_annot only
+          '''if((a == ord('d') or a == ord('D')) and stat == True):
               exp = map(operator.or_,kp_dataset['img_id'] != im, kp_dataset['person'] != person) 
               kp_dataset = kp_dataset.loc[exp]
               exp = status_data['file_name'] == im
@@ -987,7 +1008,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
           elif((a == ord('d') or a == ord('D')) and stat == False):
               gui.alert("Delete Annotation for this Person?", "Press 'd' again to delete")
               stat = True
-              
+           '''   
               
           if((a == ord('t') or a == ord('T'))):
             gui.toggle_annotations()
@@ -1025,6 +1046,8 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
 
       
       cv.destroyAllWindows()
+        
+      ''' No need as no updation now
       kp_data = kp_dataset[kp_dataset["img_id"] == im]
       new_list = kp_data['person'].unique()
       if(len(new_list) == 0):
@@ -1032,7 +1055,7 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
         status_data = status_data[status_data['file_name'] != im]
         print("All persons deleted for this image. Status Record expunged")
 
-      
+      '''
     
  
         
@@ -1045,11 +1068,14 @@ def see_review(kp_dataset_path, status_file_path, review_file_path, window_size,
       else: 
         break
 
+    
+    ''' No need
     tmp_path = os.path.join(data_file_folder, "tmp_keypoints_dataset.csv")
     kp_dataset.to_csv(tmp_path, index = False)
     status_data.to_csv(status_file_path, index = False)
     os.remove(kp_dataset_path)
     os.rename(tmp_path,kp_dataset_path)
+    '''
 
     
     

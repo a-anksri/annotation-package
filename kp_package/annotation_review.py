@@ -4,6 +4,7 @@ import cv2 as cv
 import sys
 import string
 import os
+import random
 
 class Element:
     
@@ -634,7 +635,7 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
       if(review):
           gui.add_message(text, "Space: Next person in image, t: hide annotations, l: toggle limb, n: next image")
       else:
-          gui.add_message(remarks + ": " + text, "Space: Next person, p: Previous, t: toggle landmarks, l: toggle limbs, d: delete person, q: Quit")
+          gui.add_message(remarks + ": " + text, "Space: Next person, p: Previous, t: toggle landmarks, l: toggle limbs, d: delete person, Decision: (y/n/e/s) e: expunge ; s: skip")
       continue
     else:
       point = Point(idx, pid, x, y, x1, y1, typ, hidden, annot_type, attr)
@@ -671,6 +672,225 @@ def show(kpoints, gui, im, review = False, remarks = '', with_tool = False, pers
       
 
 def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, expunge_file_path, window_size, image_folder, reviewer, keypoints_file):
+    kp_dataset = pd.read_csv(kp_dataset_path, index_col = False)
+
+    if(os.path.exists(accepted_file_path)):
+      accepted = pd.read_csv(accepted_file_path, index_col = False)
+      accepted_list = accepted['img_id'].values
+    else:
+      accepted = pd.DataFrame(columns = ['img_id', 'accepted', 'Offered_file', 'annotator_id'])
+      accepted.to_csv(accepted_file_path, index = False)
+      accepted_list = []
+
+    if(os.path.exists(expunge_file_path)):
+      expunged = pd.read_csv(expunge_file_path, index_col = False)
+      expunged_list = expunged['img_id'].values
+    else:
+      expunged = pd.DataFrame(columns = ['img_id', 'expunged', 'Offered_file', 'annotator_id'])
+      expunged.to_csv(expunge_file_path, index = False)
+      expunged_list = []
+
+
+    if(os.path.exists(to_review_path)):
+      tmp = pd.read_csv(to_review_path, index_col = False)
+      img_list = tmp['img_id'].values
+    else: 
+      img_list = kp_dataset["img_id"].unique()
+   
+    if(os.path.exists(review_file_path)):
+          reviewer_dataset = pd.read_csv(review_file_path, index_col = False)
+    else:
+          reviewer_dataset = pd.DataFrame(columns = ['img_id', 'is_ok', 'remarks', 'reviewer'])
+
+    done = reviewer_dataset['img_id'].values
+
+    gui = Display_GUI(window_size)
+    gui.add_image_controls()
+    #start = input("Enter starting number of first image to review")
+
+    count = 0
+
+    for im in img_list:
+      
+
+      if(im in done):
+          continue
+
+      if(im in accepted_list):
+        print("File " + im + " has already been accepted. Discuss with annotator" )
+        continue
+      
+      if(im in expunged_list):
+        print("File " + im + " has already been expunged. Discuss with annotator" )
+        continue
+
+
+      new_record = {'img_id':[im],'is_ok':[],'remarks':[], 'expunge': [], 'reviewer':[reviewer]}
+      
+      kp_data = kp_dataset[kp_dataset["img_id"] == im]
+      path = os.path.join(image_folder, im)
+      
+      img = cv.imread(path)
+      gui.add_image(img)
+
+      person_list = kp_data['person'].unique()
+      cv.namedWindow(im)
+      cv.setMouseCallback(im, handler, (gui,) )
+
+      i = 0
+      max = len(person_list)
+      ok = 's'
+      ex = 'n'
+      next = True
+      while(i < max):
+        person = person_list[i]
+        
+
+
+        kpoints = kp_data[kp_data["person"] == person]
+        show(kpoints, gui,im, remarks = "|| Showing Person {}".format(person), with_tool = True, person = person)
+        jump = False
+        stat = False
+        while(True):
+
+          window = gui.compose()
+
+          cv.imshow(im, window)
+          a = cv.waitKey(20)
+          if(a == ord(' ')):
+
+            if(stat):
+              gui.reset_alert()
+              stat = False
+            gui.destroy()
+            if( i == max - 1):
+                i = 0
+            else:
+                i += 1
+            next = True
+            break
+          
+              
+              
+          if(a == ord('t') or a == ord('T')):
+            gui.toggle_annotations()
+            if(stat):
+              gui.reset_alert()
+              stat = False
+          if((a == ord('l') or a == ord('L'))):
+            gui.toggle_limb()
+            if(stat):
+              gui.reset_alert()
+              stat = False
+          if(a == ord('p') or a == ord('P')):
+            gui.destroy()
+            if(i == 0):
+              i = max - 1
+            else:
+              i -= 1
+            next = False
+            break
+
+          if(a == ord('y') or a == ord('Y')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 'y'
+            break
+            
+          if(a == ord('n') or a == ord('N')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 'n'
+            break
+            
+          if(a == ord('e') or a == ord('E')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 'e'
+            break
+
+
+          if(a == ord('s') or a == ord('S')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 's'
+            break
+            
+          if(a == ord('q') or a == ord('Q')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 's'
+            ex = 'y'
+            break
+
+        if(jump):
+            break
+
+
+
+
+
+      cv.destroyAllWindows()
+      #ok = input("Is annotation satisfactory? (y/n/e/s). e to expunge ; s to skip review ")
+      if(ok == 's') or (ok == 'S'):
+         pass
+      else:
+          if (ok == 'y') or (ok == 'Y'):
+            new_record['is_ok'].append(True)
+            
+            
+          else:
+            new_record['is_ok'].append(False)
+          if(ok == 'n') or (ok == 'N'):
+              remarks = input("Any remarks? ")
+              new_record['remarks'].append(remarks)
+                  
+          else:
+            new_record['remarks'].append('Accepted')
+            
+          
+          
+          
+          if(ok == 'y') or (ok == 'Y'):
+              accepted_record = {'img_id':[im], 'accepted':[True], 'Offered_file':[keypoints_file], 'annotator_id':[keypoints_file.split('_')[3]]}
+              accepted_record = pd.DataFrame(accepted_record)
+              accepted = accepted.append(accepted_record, ignore_index = True)
+
+          if(ok == 'e') or (ok == 'E'):
+              expunged_record = {'img_id':[im], 'expunged':[True], 'Offered_file':[keypoints_file], 'annotator_id':[keypoints_file.split('_')[3]]}
+              expunged_record = pd.DataFrame(expunged_record)
+              expunged = expunged.append(expunged_record, ignore_index = True)
+              new_record['expunge'].append(True)
+          else:
+              new_record['expunge'].append(False)
+     
+          new_record = pd.DataFrame(new_record)
+          reviewer_dataset = reviewer_dataset.append(new_record, ignore_index = True)
+      
+      reviewer_dataset.to_csv(review_file_path, index = False)
+      accepted.to_csv(accepted_file_path, index = False)
+      expunged.to_csv(expunge_file_path, index = False)
+      
+
+      #b = input("show next image in folder? (y/n) ")
+
+      if(ex == 'n') or (ex == 'N'):
+
+        continue
+      else: 
+        break
+
+    reviewer_dataset.to_csv(review_file_path, index = False)
+    accepted.to_csv(accepted_file_path, index = False)
+    expunged.to_csv(expunge_file_path, index = False)
+
+
+def random_review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path, expunge_file_path, window_size, image_folder, reviewer, keypoints_file):
     kp_dataset = pd.read_csv(kp_dataset_path, index_col = False)
 
     if(os.path.exists(accepted_file_path)):
@@ -738,7 +958,7 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
       i = 0
       max = len(person_list)
-      
+      ok = 'y'
       next = True
       while(i < max):
         person = person_list[i]
@@ -794,6 +1014,21 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
             next = False
             jump = True
             break
+            
+          if(a == ord('x') or a == ord('X')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 'n'
+            break
+            
+          if(a == ord('e') or a == ord('E')):
+            gui.destroy()
+            next = False
+            jump = True
+            ok = 'e'
+            break
+
 
         if(jump):
             break
@@ -803,7 +1038,15 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
 
 
       cv.destroyAllWindows()
-      ok = input("Is annotation satisfactory? (y/n/e/s). e to expunge ; s to skip review ")
+      
+      r = random.randint(0,10)
+      if(r != 5) and (ok != 'e') and (ok != 'x'):
+            ok = 'y'
+      else:
+            ok = input("Is annotation satisfactory? (y/n/e/s). e to expunge ; s to skip review ")
+        
+
+            
       if(ok == 's') or (ok == 'S'):
          pass
       else:
@@ -843,7 +1086,10 @@ def review(kp_dataset_path, accepted_file_path, to_review_path, review_file_path
       accepted.to_csv(accepted_file_path, index = False)
       expunged.to_csv(expunge_file_path, index = False)
 
-      b = input("show next image in folder? (y/n) ")
+      if(r != 5):
+            b = 'y'
+      else:
+            b = input("show next image in folder? (y/n) ")
 
       if(b == 'y') or (b == 'Y'):
 
